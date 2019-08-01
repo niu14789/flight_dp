@@ -13,10 +13,11 @@ Ryan Huang         2019-06-20              V1.0
 #include "SerialPort.h"
 #include "GpsUbx.h"
 #include "Variables.h"
-
+#include "systick.h"
 
 #define GPS_BUFFER_LENGTH  1024
 
+int GpsGetUbxInfo(UBX_INFO_PAYLOAD *poUbxInfo);
 extern void DelayMs(U32 dwTimeMs);
 extern void MyMemCpy(U8 *pbyDst, const U8*pbySrc, int iLen);
 extern U64 GetTimeStampUs(void);

@@ -53,6 +53,7 @@ OF SUCH DAMAGE.
 #include "sbus_usart.h"
 #include "functions.h"
 #include "Variables.h"
+#include "systick.h"
 //#include "cdc_acm_core.h"
 
 
@@ -282,12 +283,20 @@ int main(void)
     float dt;
     long long _imu_data_timestamp, Nowtimestamp;
     static int s_iImuCalibrationFlag = 0;
+	
     U64 qwStart, qwEnd;
-    U32 dwGps,dwTemp,dwMax=0;
+    U32 dwGps;
+#if NTX		
+	  U32 dwTemp,dwMax = 0;
+
     float fTemp;
 
     float Acctmp, Gyrotmp;
-    float Acc_K[3], Acc_bias[3];
+#endif	
+    float Acc_K[3];
+#if NTX
+	  float Acc_bias[3];
+#endif
 #if 0  
     // for app address start at 0x08008000
     __enable_irq();
