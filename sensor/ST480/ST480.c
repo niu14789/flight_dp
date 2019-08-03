@@ -34,7 +34,6 @@ static int gs_iMagInitSuccess = 0;
 int ST480_Init(void)
 {
     U8 abyTemp[4];
-    int iRet;
 
     gs_iMagInitSuccess = 0;
     gs_poI2cMagHandle = I2cOpen(MAG_I2C_IDX);
@@ -47,27 +46,16 @@ int ST480_Init(void)
     abyTemp[1] = 0x00;
     abyTemp[2] = 0x7c;
     abyTemp[3] = (0x00 << 2); //the addr of register   Note: Address[1:0] = 0x00
-    iRet = I2cWriteBytesAndRead(gs_poI2cMagHandle, abyTemp, 4, abyTemp, 1);
-    if (1 != iRet)
-    {
-        return -2;
-    }
+    I2cWriteBytesAndRead(gs_poI2cMagHandle, abyTemp, 4, abyTemp, 1);
     
     abyTemp[0] = 0x60;//the command of write register
     abyTemp[1] = 0x00;
     abyTemp[2] = 0X18;
     abyTemp[3] = (0x02 << 2); //the addr of register   Note: Address[1:0] = 0x00
-    iRet = I2cWriteBytesAndRead(gs_poI2cMagHandle, abyTemp, 4, abyTemp, 1);
-    if (1 != iRet)
-    {
-        return -3;
-    }
+    I2cWriteBytesAndRead(gs_poI2cMagHandle, abyTemp, 4, abyTemp, 1);
     
-    iRet = I2cReadBytes(gs_poI2cMagHandle, abyTemp, 0x3e, 1);  //Single measure mode
-    if (1 != iRet)
-    {
-        return -4;
-    }
+    I2cReadBytes(gs_poI2cMagHandle, abyTemp, 0x3e, 1);  //Single measure mode
+
     gs_iMagInitSuccess = 1;
     DelayMs(30);
     return 0;

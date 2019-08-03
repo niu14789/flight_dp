@@ -53,14 +53,9 @@ typedef struct _PARAMETER_SAVE_ {
     float fSphereRadius;
     float afDiag[3];       // x,y,z
     float afOffsetDiag[3]; // x,y,z
-    
-    U8 abyRfID[8];
-    U8 abyRemoterVersion[4];
-    
-    U8 abyFlyLimitSettingData[8];
 
     // other parameter to save here
-    U8 abyRev[2048-84];
+    U8 abyRev[2048-64];
 }PARAMETER_SAVE; // 2048 bytes
 #pragma pack()
 

@@ -8,9 +8,9 @@
 #define BUFFER_SIZE   2048
 
 typedef enum _USART_PORT_{
-    USART_PORT0 = 0,   // USART0 for GPS
-    USART_PORT1,       // UART3 for WIFI(APP)
-    USART_PORT2,       // UART4 for Optical flow
+    USART_PORT0 = 0,   // for GPS
+    USART_PORT1,       // for WIFI(APP)
+    USART_PORT2,       // for Optical flow
     USART_PORT_LAST
 }USART_PORT;
 

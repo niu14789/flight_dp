@@ -37,7 +37,6 @@ SPIBaseDefine *SpiOpen(SPI_DEVICE eDevice)
         rcu_periph_clock_enable(RCU_GPIOA);
         rcu_periph_clock_enable(RCU_SPI0);
         gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_4);      // CS
-        gpio_bit_set(GPIOA, GPIO_PIN_4);  // inactive CS
         gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_5);       // SCK
         gpio_init(GPIOA, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, GPIO_PIN_6); // MISO
         gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_7);       // MOSI
@@ -52,14 +51,13 @@ SPIBaseDefine *SpiOpen(SPI_DEVICE eDevice)
         oSpiInit.endian = SPI_ENDIAN_MSB;;
         spi_init(SPI0, &oSpiInit);
         spi_enable(SPI0);
- //       spi_nssp_mode_enable(SPI0);
- //       spi_nss_output_enable(SPI0);
+        spi_nssp_mode_enable(SPI0);
+        spi_nss_output_enable(SPI0);
         return &g_oSdc;
     case IMU_SPI_IDX:
         rcu_periph_clock_enable(RCU_GPIOB);
         rcu_periph_clock_enable(RCU_SPI1);
         gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_12);      // CS
-        gpio_bit_set(GPIOB, GPIO_PIN_12);  // inactive CS
         gpio_init(GPIOB, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_13);       // SCK
         gpio_init(GPIOB, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, GPIO_PIN_14); // MISO
         gpio_init(GPIOB, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_15);       // MOSI
@@ -73,21 +71,17 @@ SPIBaseDefine *SpiOpen(SPI_DEVICE eDevice)
         oSpiInit.prescale = SPI_PSC_8; // 60MHz /8 = 7.5MHz
         oSpiInit.endian = SPI_ENDIAN_MSB;;
         spi_init(SPI1, &oSpiInit);
-  //      spi_nssp_mode_enable(SPI1);
-  //      spi_nss_output_enable(SPI1);
+        spi_nssp_mode_enable(SPI1);
+        spi_nss_output_enable(SPI1);
         spi_enable(SPI1);
         return &g_oImu;
     case G24_SPI_IDX:
         rcu_periph_clock_enable(RCU_GPIOA);
         rcu_periph_clock_enable(RCU_GPIOB);
         rcu_periph_clock_enable(RCU_SPI2);
-        rcu_periph_clock_enable(RCU_AF);
-        /* JTAG-DP disabled and SW-DP enabled, so SPI0 can use PB3 and PB4 */
-        gpio_pin_remap_config(GPIO_SWJ_SWDPENABLE_REMAP,ENABLE);
-    
         gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_15);     // CS
         gpio_init(GPIOB, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_3);       // SCK
-        gpio_init(GPIOB, GPIO_MODE_IPU, GPIO_OSPEED_50MHZ, GPIO_PIN_4); // MISO
+        gpio_init(GPIOB, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, GPIO_PIN_4); // MISO
         gpio_init(GPIOB, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_5);       // MOSI
 
         //SPI2 parameter config
@@ -96,13 +90,12 @@ SPIBaseDefine *SpiOpen(SPI_DEVICE eDevice)
         oSpiInit.frame_size = SPI_FRAMESIZE_8BIT;
         oSpiInit.clock_polarity_phase = SPI_CK_PL_LOW_PH_1EDGE;
         oSpiInit.nss = SPI_NSS_SOFT;
-        oSpiInit.prescale = SPI_PSC_16; // 60MHz /32 = 1.875MHz
+        oSpiInit.prescale = SPI_PSC_32; // 60MHz /32 = 1.875MHz
         oSpiInit.endian = SPI_ENDIAN_MSB;;
         spi_init(SPI2, &oSpiInit);
         spi_enable(SPI2);
         spi_nssp_mode_enable(SPI2);
         spi_nss_output_enable(SPI2);
-        gpio_bit_set(GPIOA,GPIO_PIN_15);
         return &g_o24G;
     default:
         return NULL;
@@ -116,14 +109,13 @@ Function Name : U8 SpiWriteReadByte(SPIBaseDefine *poHandle, U8 WriteByte)
 Description   : write/read one byte data on SPI bus
 Parameter     : 1.poHandle[in]:spi device handle
                     2.WriteByte[in]:write data
-                    2.pbyReadOut[out]:read data
-Return        : <0 : write/read time out error
-                 0 : the bytes of the data has been read
+Return        : USART_ERR_PORT_NUM : usart handle is null
+                 >=0 : the bytes of the data has been read
 History :
 Author                               date                   version
 Ryan Huang & Filk Lee        2019-05-22               V1.0
 ******************************************************************************/
-int SpiWriteReadByte(SPIBaseDefine *poHandle, U8 WriteByte, U8 *pbyReadOut)
+U8 SpiWriteReadByte(SPIBaseDefine *poHandle, U8 WriteByte)
 {
     U32  dwTimeStart = 0;
     U32  dwTimeEnd = 0;
@@ -133,7 +125,7 @@ int SpiWriteReadByte(SPIBaseDefine *poHandle, U8 WriteByte, U8 *pbyReadOut)
     {
         if ((dwTimeEnd - dwTimeStart) > SPI_TIME_OUT_MS)
         {
-            return -1;
+            return 1;
         }
         dwTimeEnd = GetTickCountMs();
     }
@@ -144,12 +136,11 @@ int SpiWriteReadByte(SPIBaseDefine *poHandle, U8 WriteByte, U8 *pbyReadOut)
     {
         if ((dwTimeEnd - dwTimeStart) > SPI_TIME_OUT_MS)
         {
-            return -2;
+            return 2;
         }
         dwTimeEnd = GetTickCountMs();
     }
-    *pbyReadOut = spi_i2s_data_receive(poHandle->m_dwRegBaseAddr);
-    return 0;
+    return spi_i2s_data_receive(poHandle->m_dwRegBaseAddr);
 
 }
 
@@ -160,29 +151,20 @@ Parameter     : 1.poHandle[in]:spi device handle
                     2.byRegAddr[in]: register start address
                     3.pbyDataOut[out]:read data buffer
                     4.iWantReadLen[in]:want read length
-Return        : the bytes of the data has been read, <0:read time out error.
+Return        : the bytes of the data has been read
 History :
 Author                               date                   version
 Ryan Huang & Filk Lee        2019-05-22               V1.0
 ******************************************************************************/
 int SpiReadDataBlock(SPIBaseDefine *poHandle, U8 byRegAddr, U8 *pbyDataOut, int iWantReadLen)
 {
-    int i, iRet;
-    U8 byTemp;
+    int i;
 
     gpio_bit_reset(poHandle->m_dwCsGpioPeriph, poHandle->m_dwCsGpioPin);  // active CS
-    iRet = SpiWriteReadByte(poHandle, byRegAddr|0x80, &byTemp);  // write
-    if (iRet < 0)
-    {
-        return iRet;
-    }
+    SpiWriteReadByte(poHandle, byRegAddr|0x80);
     for (i = 0; i < iWantReadLen; i++)
     {
-        iRet = SpiWriteReadByte(poHandle, 0xff, &pbyDataOut[i]);  // read
-        if (iRet < 0)
-        {
-            return iRet;
-        }
+        pbyDataOut[i] = SpiWriteReadByte(poHandle, 0xff);
     }
     gpio_bit_set(poHandle->m_dwCsGpioPeriph, poHandle->m_dwCsGpioPin);  // inactive CS
     return iWantReadLen;
@@ -202,22 +184,13 @@ Ryan Huang & Filk Lee        2019-05-22               V1.0
 ******************************************************************************/
 int SpiWriteDataBlock(SPIBaseDefine *poHandle, U8 byRegAddr, U8 *pbyDataIn, int iWantWriteLen)
 {
-    int i, iRet;
-    U8 byTemp;
+    int i;
 
     gpio_bit_reset(poHandle->m_dwCsGpioPeriph, poHandle->m_dwCsGpioPin);  // active CS
-    iRet = SpiWriteReadByte(poHandle, byRegAddr&0x7f, &byTemp);  // write
-    if (iRet < 0)
-    {
-        return iRet;
-    }
+    SpiWriteReadByte(poHandle, byRegAddr&0x7f);
     for (i = 0; i < iWantWriteLen; i++)
     {
-        iRet = SpiWriteReadByte(poHandle, pbyDataIn[i], &byTemp);  // write
-        if (iRet < 0)
-        {
-            return iRet;
-        }
+        SpiWriteReadByte(poHandle, pbyDataIn[i]);
     }
     gpio_bit_set(poHandle->m_dwCsGpioPeriph, poHandle->m_dwCsGpioPin);  // inactive CS
     return iWantWriteLen;

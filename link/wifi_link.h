@@ -4,17 +4,6 @@
 #include "stdbool.h"
 #include "wifi_link.h"
 
-#define MANUFACTURER            0XE1
-#define PLANE_VERSION_HIGH      1
-#define PLANE_VERSION_MEDIAN    0
-#define PLANE_VERSION_LOW       1
-
-#define AMERICA_HAND            0
-#define JAPAN_HAND              1
-
-#define NORMAL_MODE             0X00
-#define GREEN_HANDS_MODE        0XFF
-
 enum e_command
 {
     CMD0    = 0,
@@ -25,7 +14,6 @@ enum e_command
     CMD5    = 5,
     CMD6    = 6, 
     CMD7    = 7,
-    CMD8    = 8,
 };
 
 enum e_bit
@@ -37,56 +25,43 @@ enum e_bit
     BIT4    = 0X10,
     BIT5    = 0X20,
     BIT6    = 0X40,
-    BIT7    = 0X80,   
-    BIT8    = 0X0100,
-    BIT9    = 0X0200,
-    BIT10    = 0X0400,
-    BIT11    = 0X0800,
-    BIT12    = 0X1000,
-    BIT13    = 0X2000,
-    BIT14    = 0X4000,
-    BIT15    = 0X8000,  
+    BIT7    = 0X80,    
 };
 
 //plnae->wifi数据协议定义
 #define PLANE_PACKET_HEAD       0xFFFE
-#define PLANE_PACKET_HEAD_H     0xFF
-#define PLANE_PACKET_HEAD_L     0xFE
 
 enum e_command_packet_len
 {
     CMD0_PACKET_LEN    = 31,
     CMD1_PACKET_LEN    = 1,
-    CMD2_PACKET_LEN    = 5,
-    CMD3_PACKET_LEN    = 5,
+    CMD2_PACKET_LEN    = 6,
+    CMD3_PACKET_LEN    = 4,
     CMD4_PACKET_LEN    = 9,
     CMD5_PACKET_LEN    = 1,
-    CMD6_PACKET_LEN    = 16,    
+    CMD6_PACKET_LEN    = 7,    
 };
 
 
 
 //电压、gps信息、距离速度、最大距离速度(500ms更新一次)
-#pragma pack (1) /*指定按1字节对齐*/
 typedef struct  
 {
     uint16_t    plane_voltage;              //电压值*100
     uint16_t    remoter_voltage;            //电压值*100
-    int32_t     gps_longitude;              //1e-7 大端
-    int32_t     gps_latitude;               //1e-7 大端
-    uint8_t     gps_NumSv;                  //卫星数  //GPS信号强度 0：无卫星，1：GPS信号弱 2：卫星正常 3：卫星非常强
+    uint32_t    gps_longitude;              //1e-7 大端
+    uint32_t    gps_latitude;               //1e-7 大端
+    uint8_t     gps_rssi;                   //GPS信号强度 0：无卫星，1：GPS信号弱 2：卫星正常 3：卫星非常强
     uint16_t    heading;                    //0-360 大端
-    int16_t     distance;                   //距离    真实距离*10
-    int16_t     altitude;                   //高度    真实高度*10
+    uint16_t    distance;                   //距离    真实距离*10
+    uint16_t    altitude;                   //高度    真实高度*10
     uint16_t    horizontal_speed;           //水平速度 *10
     uint16_t    vertical_speed;             //垂直速度 *10  
-    uint8_t     plane_battery_remaining_capacity;   //飞机电池剩余电量
-    uint8_t     plane_battery_remaining_time;       //飞机电池剩余飞行时间
-    int16_t     plane_pitch_angle;                  //飞机俯仰角
-    int16_t     plane_roll_angle;                   //飞机翻滚角
-    int16_t     plane_remain;                       //预留
+    uint16_t    max_distance;               //最大距离    真实距离*10
+    uint16_t    max_altitude;               //最大高度    真实高度*10
+    uint16_t    max_horizontal_speed;       //最大水平速度 *10
+    uint16_t    max_vertical_speed;         //最大垂直速度 *10  
 }plane_cmd0_packet_def;
-#pragma pack () /*取消指定对齐，恢复缺省对齐*/
 
 extern plane_cmd0_packet_def plane_cmd0_packet;
 
@@ -135,39 +110,28 @@ typedef struct
                                 //bit4:   0 风小             1 风大警告
                                 //bit5：  0 GPS 信号好        1  GPS 信号弱警告
     
-    uint8_t     plane_status5;  //bit0：  拍照，按下为1，再按为0（bit7 =1 有效）
-                                //bit1:   录像，按下为1，再按为0（bit7 =1 有效）
-                                //bit2:   
-                                //bit3:   
-                                //bit4:   
-                                //bit5:   
-                                //bit6:   
-                                //bit7:   0：中继遥控版，1：2.4G遥控版   
+    uint8_t     plane_status5;  //预留
+    uint8_t     plane_status6;  //预留  
 }plane_cmd2_packet_def;
 extern plane_cmd2_packet_def plane_cmd2_packet;
 
 //plane_cmd2_packet.plane_status1操作
-void set_plane_lock_status(void);
-void set_plane_unlock_status(void);
-uint8_t get_plane_lock_status(void);
-void set_plane_stop_fly_status(void);
-void set_plane_flying_status(void);
-uint8_t get_plane_flying_status(void);
-    
-void set_plane_no_gps_status(void);
-void set_plane_got_gps_status(void);
-void clear_plane_follow_mode(void);
-void set_plane_follow_mode(void);
-void clear_plane_circle_mode(void);
-void set_plane_circle_mode(void);
-void clear_plane_point_mode(void);
-void set_plane_point_mode(void);
-void clear_plane_return_noome_mode(void);
-void set_plane_return_home_mode(void);
-uint8_t get_plane_return_home_mode_status(void);
-void clear_plane_landing_mode(void);
-void set_plane_landing_mode(void);
-uint8_t get_plane_landing_mode_status(void);
+//void set_plane_lock_status(void);
+//void set_plane_unlock_status(void);
+//void set_plane_stop_fly_status(void);
+//void set_plane_flying_status(void);
+//void set_plane_no_gps_status(void);
+//void set_plane_got_gps_status(void);
+//void clear_plane_follow_mode(void);
+//void set_plane_follow_mode(void);
+//void clear_plane_circle_mode(void);
+//void set_plane_circle_mode(void);
+//void clear_plane_point_mode(void);
+//void set_plane_point_mode(void);
+//void clear_plane_return_noome_mode(void);
+//void set_plane_return_home_mode(void);
+//void clear_plane_landing_mode(void);
+//void set_plane_landing_mode(void);
 
 //plane_cmd2_packet.plane_status2操作
 void clear_plane_gyro_calibrate_status(void);
@@ -180,7 +144,6 @@ void set_plane_unlink_remoter_status(void);
 void set_plane_link_remoter_status(void);
 void clear_plane_nohead_mode(void);
 void set_plane_nohead_mode(void);
-uint8_t get_plane_nohead_mode_status(void);
 void clear_plane_scram_mode(void);
 void set_plane_scram_mode(void);
 
@@ -189,7 +152,6 @@ void set_plane_low_speed_status(void);
 void set_plane_high_speed_status(void);
 void clear_plane_low_voltage_status(void);
 void set_plane_low_voltage_status(void);
-uint8_t get_plane_low_voltage_status(void);
 void clear_plane_green_hands_mode(void);
 void set_plane_green_hands_mode(void);
 void clear_plane_front_left_motor_overload(void);
@@ -214,9 +176,6 @@ void clear_plane_wind_erro(void);
 void set_plane_wind_erro(void);
 void clear_plane_gps_rssi_erro(void);
 void set_plane_gps_rssi_erro(void);
-//plane_cmd2_packet.plane_status5操作
-void update_plane_photo_function_to_wifi(void);
-void update_plane_video_function_to_wifi(void);
 
 //飞机返回当前设置数据
 typedef struct 
@@ -225,7 +184,6 @@ typedef struct
     uint8_t     fly_distance_limit;         //限制飞行距离 (10---250)*2默认35m1字节(单位2m最小变化2m显示20---500，实际发送数据(10-250) 
     uint8_t     return_altitude_limit;      //返航高度(10---130)
     uint8_t     control_mode;               //新手模式0xff 正常模式0x00  
-    uint8_t     stick_mode;                 //摇杆模式 0：美国手，1：日本手
 }plane_cmd3_packet_def;
 extern plane_cmd3_packet_def plane_cmd3_packet;
 
@@ -261,37 +219,25 @@ typedef struct
     uint8_t     plane_version_l;            //飞机版本号 低位
     uint8_t     remoter_version_h;          //遥控器版本号 高位
     uint8_t     remoter_version_m;          //遥控器版本号 中位
-    uint8_t     remoter_version_l;          //遥控器版本号 低位  
-    uint8_t     gimbal_version_h;           //飞机版本号 高位
-    uint8_t     gimbal_version_m;           //飞机版本号 中位
-    uint8_t     gimbal_version_l;           //飞机版本号 低位
-    uint8_t     camera_version_h;            //遥控器版本号 高位
-    uint8_t     camera_version_m;            //遥控器版本号 中位
-    uint8_t     camera_version_l;            //遥控器版本号 低位 
-    uint8_t     image_version_h;            //遥控器版本号 高位
-    uint8_t     image_version_m;            //遥控器版本号 中位
-    uint8_t     image_version_l;            //遥控器版本号 低位 
+    uint8_t     remoter_version_l;          //遥控器版本号 低位   
 }plane_cmd6_packet_def;
 extern plane_cmd6_packet_def plane_cmd6_packet;
 
 void plane_send_data_packet(uint8_t *pbuffer,uint8_t cmd);
 
 //wifi->plane数据协议定义
-#define WIFI_PACKET_HEAD        0xFFFD
-#define WIFI_PACKET_HEAD_H      0xFF
-#define WIFI_PACKET_HEAD_L      0xFD
+#define WIFI_PACKET_HEAD       0xFFFD
 
 enum e_command_wifi_packet_len
 {
-    WIFI_CMD0_PACKET_LEN    = 14,
-    WIFI_CMD1_PACKET_LEN    = 11,
+    WIFI_CMD0_PACKET_LEN    = 12,
+    WIFI_CMD1_PACKET_LEN    = 10,
     WIFI_CMD2_PACKET_LEN    = 2,
-    WIFI_CMD3_PACKET_LEN    = 5,
+    WIFI_CMD3_PACKET_LEN    = 4,
     WIFI_CMD4_PACKET_LEN    = 2,
     WIFI_CMD5_PACKET_LEN    = 1,
     WIFI_CMD6_PACKET_LEN    = 257, 
     WIFI_CMD7_PACKET_LEN    = 3,
-    WIFI_CMD8_PACKET_LEN    = 2,
 };
 
 //手机gps 指南针数据
@@ -301,7 +247,7 @@ typedef struct
     int32_t     phone_longitude;            //手机经度
     uint16_t    phone_gps_accuracy;         //手机GPS精度
     uint16_t    phone_compass_direction;    //手机指南针方向 
-    uint16_t    follow_me_flag;             //没有跟随时发送0x0000,跟随时发送0xffff，200ms发送一次进入控制界面一直发送
+    
 }wifi_cmd0_packet_def;
 extern wifi_cmd0_packet_def wifi_cmd0_packet;
 
@@ -309,36 +255,31 @@ extern wifi_cmd0_packet_def wifi_cmd0_packet;
 typedef struct 
 {
     uint8_t     channel_number;             //控制通道数
-    uint8_t     throttle;                   //油门 0 为最小，250 最大 ,中间值为125
-    uint8_t     aileron;                    //0 为最小，250 最大 ,中间值为125
-    uint8_t     elevator;                   //0 为最小，250 最大 ,中间值为125
-    uint8_t     rudder;                     //0 为最小，250 最大 ,中间值为125
-    uint8_t     gimbal_pitch;               //0 为最小，250 最大 ,中间值为125
-    uint8_t     camera_zoom;                //0 为最小，250 最大 ,中间值为125
-    uint8_t     led_control;                //LED灯控制 bit6:7 0-3
+    uint8_t     throttle;                   //油门 0 为最小，255 最大
+    uint8_t     aileron;                    //63 为中间值，0 为最左或者最下，127 为最右或者最上
+    uint8_t     elevator;
+    uint8_t     rudder; 
+    uint8_t     aileron_fine_tuning;        //最小为 0，最大为32，中心值:16
+    uint8_t     elevator_fine_tuning;
+    uint8_t     rudder_fine_tuning;
     uint8_t     control_info;               //控制信息
     uint8_t     calibrate_info;             //校准信息
-    uint8_t     camera_info;                //相机信息
+    
 }wifi_cmd1_packet_def;
 extern wifi_cmd1_packet_def wifi_cmd1_packet;
 
-uint8_t get_phone_control_speed_mode(void); //大小档模式，0/1/2，低中高
-uint8_t get_phone_control_roll_mode(void);  //翻滚模式，按下为1，再按为0
-uint8_t get_phone_control_return_home_mode(void);   //返航模式，按下为1，再按为0
-uint8_t get_phone_control_nohead_mode(void);    //无头模式，按下为1，再按为0
-uint8_t get_phone_control_scram_mode(void);     //急停模式，按下为1，再按为0
-uint8_t get_phone_control_start_landing(void);  //一键启动/着陆，按下为1，再按为0
-//uint8_t get_phone_control_landing(void);
-uint8_t get_phone_control_compass_calibrate(void); //地磁校准，按下为1，1秒后为0
-uint8_t get_phone_control_level_calibrate(void);//水平校准，按下为1，1秒后为0
-uint8_t get_phone_control_lock_info(void);//解锁，按下为1，1秒后为0
-uint8_t get_phone_control_hot_spot_around(void);//热点环绕，按下为1，再按为0 
-uint8_t get_phone_control_point_fly(void);//指点飞行，按下为1，再按为0
-uint8_t get_phone_control_altitude_info(void);  //定高标志，按下为1，再按为0
-uint8_t get_phone_control_one_key_calibrate_flag(void); //一键校准，按下为1，松开为0
-uint8_t get_phone_control_camera_up_left(void); //摄像头上升或向左标志，按下为1，松开为0
-uint8_t get_phone_control_camera_down_right(void); //摄像头下降或向右标志，按下为1，松开为0
-uint8_t get_phone_control_led(void); //灯控制位，初始位0，再按为1，再按为2，0/1/2 循环
+uint8_t get_phone_control_speed_mode(void);
+uint8_t get_phone_control_roll_mode(void);
+uint8_t get_phone_control_return_home_mode(void);
+uint8_t get_phone_control_nohead_mode(void);
+uint8_t get_phone_control_scram_mode(void);
+uint8_t get_phone_control_start(void);
+uint8_t get_phone_control_landing(void);
+uint8_t get_phone_control_altitude_info(void);
+uint8_t get_phone_control_one_key_calibrate_flag(void);
+uint8_t get_phone_control_camera_up_left(void);
+uint8_t get_phone_control_camera_down_right(void);
+uint8_t get_phone_control_led(void);
 
 //灯 云台控制
 typedef struct 
@@ -355,7 +296,6 @@ typedef struct
     uint8_t     distance_limit_setting;     //限制飞行距离 (10---250)*2默认30m1字节(单位2m最小变化2m显示20---500，实际发送数据(10-250) 
     uint8_t     return_altitude_setting;    //返航高度(10---130)    默认30m  1字节//返航高度小于最大飞行高度
     uint8_t     green_hands_setting;        //新手模式新手模式0xff 正常模式0x00
-    uint8_t     stick_mode;                 //摇杆模式 0：美国手，1：日本手
 }wifi_cmd3_packet_def;
 extern wifi_cmd3_packet_def wifi_cmd3_packet;
 
@@ -375,9 +315,9 @@ typedef struct
 }wifi_cmd5_packet_def;
 extern wifi_cmd5_packet_def wifi_cmd5_packet;
 
-uint8_t get_phone_control_compass_calibrate2(void); //默认0，磁场校准为1
-uint8_t get_phone_control_level_calibrate2(void); //默认0，水平校准为1
-uint8_t get_phone_control_lock_info2(void); //默认0，解锁为1
+uint8_t get_phone_control_compass_calibrate(void);
+uint8_t get_phone_control_level_calibrate(void);
+uint8_t get_phone_control_lock_info(void);
 
 //航点飞行（多点）：
 typedef struct 
@@ -401,35 +341,4 @@ typedef struct
                                         
 }wifi_cmd7_packet_def;
 extern wifi_cmd7_packet_def wifi_cmd7_packet;
-
-#define SYNCHRONOUS_CMD     0XAA55
-//同步请求
-typedef struct 
-{
-    uint16_t    synchronous_request;        //同步请求                                       
-}wifi_cmd8_packet_def;
-extern wifi_cmd8_packet_def wifi_cmd8_packet;
-
-
-//更新机头方向至APP
-void updata_plane_heading_to_wifi(uint16_t wheading);
-//更新距离至APP
-void updata_plane_distance_to_wifi(int16_t sdistance);
-//更新海拔至APP
-void updata_plane_altitude_to_wifi(uint16_t saltitude);
-
-
-void wifi_link_init(void);
-void plane_send_data_packet(uint8_t *pbuffer,uint8_t cmd);
-void wifi_data_packet_decode(uint8_t *pbuffer);
-//访问频率1000hz
-void wifi_link_data_receive(void);
-uint8_t get_camera_photo_status(void);
-uint8_t get_camera_video_status(void);
-//访问频率1000hz
-void wifi_link_data_send(void);
-void store_fly_limit_setting_data(void);
-bool read_fly_limit_setting_data(void);
 #endif
-
-

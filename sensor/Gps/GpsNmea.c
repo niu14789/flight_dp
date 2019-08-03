@@ -1108,70 +1108,48 @@ int s_GpsCheckBufferValid(U8 *pbyBuff, int iSaveLen)
 
 int GpsInit(void)
 {
-    int iRet, iLen = 0;
-    U32 dwStartTimeMs, dwCurTimeMs;
-    static U8 s_abySetBauds115200bps[37]   = {0xB5, 0x62, 0x06, 0x00, 0x14, 0x00, 0x01, 0x00, 
-                                       0x00, 0x00, 0xD0, 0x08, 0x00, 0x00, 0x00, 0xC2, 
-                                       0x01, 0x00, 0x07, 0x00, 0x03, 0x00, 0x00, 0x00, 
-                                       0x00, 0x00, 0xC0, 0x7E, 0xB5, 0x62, 0x06, 0x00, 
-                                       0x01, 0x00, 0x01, 0x08, 0x22};
-    static U8 s_abySetReportRate10Hz[22]   = {0xB5, 0x62, 0x06, 0x08, 0x06, 0x00, 0x64, 0x00, 
-                                       0x01, 0x00, 0x01, 0x00, 0x7A, 0x12, 0xB5, 0x62, 
-                                       0x06, 0x08, 0x00, 0x00, 0x0E, 0x30};
+//    char strBuff1[20] = "$PCAS02,100*1E\r\n";  // Set report as 10Hz
+//    char strBuff2[20] = "$PCAS01,5*19\r\n";    // Set Bauds as 115200bps
+    int iRet;
 
     iRet = s_GpsInit(USART_PORT0, 9600);
-    if (0 != iRet)
+//    iRet = s_GpsInit(USART_PORT0, 115200);
+    if (0 == iRet)
     {
-        return -1;
+ //       UsartSendNoBlocking(g_pGpsPortHandle, (const U8*)strBuff2, 14);
+ //       DelayMs(30);
+ //       UsartClose(g_pGpsPortHandle);
+        DelayMs(30);
     }
-    UsartCleanReceiveBuffer(g_pGpsPortHandle);
-    iLen = 0;
-    dwStartTimeMs = GetTickCountMs();
-    while (iLen < 100)
-    {
-        dwCurTimeMs = GetTickCountMs();
-        if ((dwCurTimeMs - dwStartTimeMs) > 6000)
-        {
-            return -2;
-        }
-        iRet = UsartGetRecvBufferlen(g_pGpsPortHandle);
-        if (iRet > 0)
-        {
-            iLen += iRet;
-        }
-    }
-    UsartSendNoBlocking(g_pGpsPortHandle, (const U8*)s_abySetBauds115200bps, sizeof(s_abySetBauds115200bps));
-    DelayMs(100);
-    UsartSendNoBlocking(g_pGpsPortHandle, (const U8*)s_abySetBauds115200bps, sizeof(s_abySetBauds115200bps));
-    DelayMs(100);
-    iRet = s_GpsInit(USART_PORT0, 115200);
-    if (0 != iRet)
-    {
-        return -3;
-    }
-    UsartCleanReceiveBuffer(g_pGpsPortHandle);
-    iLen = 0;
-    dwStartTimeMs = GetTickCountMs();
-    while (iLen < 100)
-    {
-        dwCurTimeMs = GetTickCountMs();
-        if ((dwCurTimeMs - dwStartTimeMs) > 2000)
-        {
-            return -4;
-        }
-        iRet = UsartGetRecvBufferlen(g_pGpsPortHandle);
-        if (iRet > 0)
-        {
-            iLen += iRet;
-        }
-    }
-    UsartSendNoBlocking(g_pGpsPortHandle, (const U8*)s_abySetReportRate10Hz, sizeof(s_abySetReportRate10Hz));
-    DelayMs(30);
-    UsartCleanReceiveBuffer(g_pGpsPortHandle);
-    return 0;
+//    iRet = s_GpsInit(USART_PORT0, 115200);
+//    DelayMs(30);
+//    UsartSendNoBlocking(g_pGpsPortHandle, (const U8*)strBuff1, 16);
+//    DelayMs(10);
+    return iRet;
+    
 }
 
+#if 0
+//配置UBLOX NEO-6的更新速率      
+//measrate:测量时间间隔，单位为ms，最少不能小于200ms（5Hz）
+//reftime:参考时间，0=UTC Time；1=GPS Time（一般设置为1）
+//返回值:0,发送成功;其他,发送失败.
+u8 Ublox_Cfg_Rate(u16 measrate,u8 reftime)
+{
+  _ublox_cfg_rate *cfg_rate=(_ublox_cfg_rate *)USART1_TX_BUF;
+   if(measrate<200)return 1;  //小于200ms，直接退出
+   cfg_rate->header=0X62B5;  //cfg header
+  cfg_rate->id=0X0806;     //cfg rate id
+  cfg_rate->dlength=6;     //数据区长度为6个字节.
+  cfg_rate->measrate=measrate;//脉冲间隔,us
+  cfg_rate->navrate=1;    //导航速率（周期），固定为1
+  cfg_rate->timeref=reftime;   //参考时间为GPS时间
+  Ublox_CheckSum((u8*)(&cfg_rate->id),sizeof(_ublox_cfg_rate)-4,&cfg_rate->cka,&cfg_rate->ckb);
+  Ublox_Send_Date((u8*)cfg_rate,sizeof(_ublox_cfg_rate));//发送数据给NEO-6M 
+  return Ublox_Cfg_Ack_Check();
+}
 
+#endif
 
 
 #ifdef _DEBUG_VERSION_

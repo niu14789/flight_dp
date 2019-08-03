@@ -52,10 +52,6 @@ int ICM20600_CalibrationAndSaveParameter(int iCalibrateTimes)
 {
     U8 abyBuff[14];
     I16 asRaw[7];
-    I16 asAccMax[3] = {0,0,0};
-    I16 asAccMin[3] = {0,0,0};
-    I16 asAccTemp[3] = {0,0,0};
-    I16 sTemp;
     I32 aiCount[7] = {0,0,0,0,0,0,0};
     int i, j, iRet;
     PARAMETER_SAVE *poParam;
@@ -74,7 +70,6 @@ int ICM20600_CalibrationAndSaveParameter(int iCalibrateTimes)
         iCalibrateTimes = CALIBRATION_TIMES_MIN;
     }
     
-    sTemp = g_aiSensitivitScaleFactor[ACCEL_FS_SEL_DEFAULT]/10;
     for (i = 0; i < iCalibrateTimes; i++)
     {
         iRet = ReadBytes(abyBuff, ACCEL_XOUT_H, sizeof(abyBuff));
@@ -86,44 +81,12 @@ int ICM20600_CalibrationAndSaveParameter(int iCalibrateTimes)
         for (j = 0; j < 7; j++)
         {
             aiCount[j] += asRaw[j];
-            if (j < 3)
-            {
-                if (0 == i)
-                {
-                    asAccMin[j] = asRaw[j];
-                    asAccMax[j] = asRaw[j];
-                }
-                else
-                {
-                    if (asAccMin[j] > asRaw[j])
-                    {
-                        asAccMin[j] = asRaw[j];
-                    }
-                    if (asAccMax[j] < asRaw[j])
-                    {
-                        asAccMax[j] = asRaw[j];
-                    }
-                    asAccTemp[j] = asAccMax[j] - asAccMin[j];
-                    if (asAccTemp[j] > sTemp)
-                    {
-                        i = -1;
-                    }
-                }
-            }
         }
     }
-    
     poParam = LoadParameter();
     poParam->asAccelOffset[0] = (I16)(aiCount[0]/iCalibrateTimes);
     poParam->asAccelOffset[1] = (I16)(aiCount[1]/iCalibrateTimes);
-    if (aiCount[2] > 0)
-    {
-         poParam->asAccelOffset[2] = (I16)(aiCount[2]/iCalibrateTimes - g_aiSensitivitScaleFactor[ACCEL_FS_SEL_DEFAULT]);
-    }
-    else
-    {
-         poParam->asAccelOffset[2] = (I16)(aiCount[2]/iCalibrateTimes + g_aiSensitivitScaleFactor[ACCEL_FS_SEL_DEFAULT]);
-    }
+    poParam->asAccelOffset[2] = (I16)(aiCount[2]/iCalibrateTimes - g_aiSensitivitScaleFactor[ACCEL_FS_SEL_DEFAULT]);
     poParam->asGyroOffset[0]  = (I16)(aiCount[4]/iCalibrateTimes);
     poParam->asGyroOffset[1]  = (I16)(aiCount[5]/iCalibrateTimes);
     poParam->asGyroOffset[2]  = (I16)(aiCount[6]/iCalibrateTimes);

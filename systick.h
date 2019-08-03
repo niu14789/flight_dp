@@ -64,8 +64,6 @@ U32 GetTickCountMs(void);
 
 U64 GetTimeStampUs(void);
 
-U32 GetTimeStamp10Us(void);
-
 #endif /* SYS_TICK_H */
 
 

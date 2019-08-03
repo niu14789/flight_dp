@@ -28,13 +28,8 @@ SerialPortHandle g_oUart3 =
 //#ifdef SUPPORT_UART4
 SerialPortBaseDefine g_oPort2;  // 映射到物理端口UART4
 //#endif
-#define ENABLE_GPS_USE_USART0
 
 
-#ifdef ENABLE_GPS_USE_USART0
-extern void GpsSetTimeStampUs(void);
-extern U32 GetTickCountMs(void);
-#endif
 
 void MyMemCpy(U8 *pbyDst, const U8*pbySrc, int iLen)
 {
@@ -59,7 +54,7 @@ Ryan Huang & Filk Lee        2019-05-22               V1.0
 void USART0_IRQHandler(void)
 {
     U32 dwDmaBufferRemain, i, dwDmaReceiveNum;
-
+    
     if (RESET != usart_interrupt_flag_get(USART0, USART_INT_FLAG_IDLE))
     {
         usart_interrupt_flag_clear(USART0, USART_INT_FLAG_IDLE);
@@ -81,9 +76,6 @@ void USART0_IRQHandler(void)
         }
         dma_transfer_number_config(DMA0, DMA_CH4, g_oUsart0.oDma.m_dwRecvBufferSize);
         dma_channel_enable(DMA0, DMA_CH4);
-#ifdef ENABLE_GPS_USE_USART0
-        GpsSetTimeStampUs();
-#endif
     }
 }
 
@@ -354,8 +346,6 @@ SerialPortHandle *UsartOpen(USART_PORT ePort)
         
         // Initial DMA here...
         UsartDmaInit(ePort);
-        g_oUsart0.oUsartParam.m_dwRecvIndexHead = 0;
-        g_oUsart0.oUsartParam.m_dwRecvIndexTail = 0;
         
         return &g_oUsart0;
 
@@ -394,8 +384,6 @@ SerialPortHandle *UsartOpen(USART_PORT ePort)
         
         // enable uart/usart receive idle interrupt 
         usart_interrupt_enable(UART3, USART_INT_IDLE); // there has not sent idle interrupt, but has sent finished interrupt.
-        g_oUart3.oUsartParam.m_dwRecvIndexHead = 0;
-        g_oUart3.oUsartParam.m_dwRecvIndexTail = 0;
         return &g_oUart3;
     default:
         return NULL;
@@ -731,6 +719,7 @@ Ryan Huang & Filk Lee        2019-05-22               V1.0
 ******************************************************************************/
 int UsartSendNoBlocking(SerialPortHandle *pPort, const U8 *pbyDataIn, int iWantToWrite)
 {
+    int iWriteCount = 0;
     if (NULL == pPort)
     {
         return USART_ERR_PORT_NUM;
@@ -742,7 +731,7 @@ int UsartSendNoBlocking(SerialPortHandle *pPort, const U8 *pbyDataIn, int iWantT
         DMA_CHMADDR(pPort->oDma.m_dwDmaNum, pPort->oDma.m_eDmaSendChn) = (U32)pbyDataIn;
         DMA_CHCNT(pPort->oDma.m_dwDmaNum, pPort->oDma.m_eDmaSendChn) = (iWantToWrite & DMA_CHANNEL_CNT_MASK);
         dma_channel_enable(pPort->oDma.m_dwDmaNum, pPort->oDma.m_eDmaSendChn);
-        return iWantToWrite;
+        return iWriteCount;
     }
 }
 

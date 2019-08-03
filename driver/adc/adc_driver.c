@@ -82,9 +82,4 @@ float get_battery_voltage(void)
     return m_power.bat_voltage;
 }
 
-float get_plane_battery_voltage_value(void)
-{
-    return m_power.bat_voltage;
-}
-
 

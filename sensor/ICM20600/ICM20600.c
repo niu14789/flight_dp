@@ -130,7 +130,7 @@ int ICM20600_Init(void)
     {
         return -2;
     }
-    if (0x11 != abyTemp[0]) // Check if ID is ICM20600 or not.
+    if (0x11 == abyTemp[0]) // Check if ID is ICM20600 or not.
     {
         return -3;
     }

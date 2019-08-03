@@ -4,7 +4,7 @@
 #include "ICM20600.h"
 #include "Dps310.h"
 #include "ST480.h"
-#include "GpsUbx.h"
+#include "GpsNmea.h"
 
 #define TAI ((float)0.012)
 #define TAJ ((float)0.024)
@@ -365,7 +365,7 @@ typedef struct _SENSOR_RAW_DATA_
     sCompass oCompass;
     int m_iCompassUpdateFlag; // 1:update, 0:not update yet
     
-    UBX_INFO_PAYLOAD oGpsInfo;
+    NMEA_INFO oGpsInfo;
     int m_iGpsUpdateFlag; // 1:update, 0:not update yet
 
     BARO_METER_DATA oBaroMeter;

@@ -46,14 +46,13 @@ OF SUCH DAMAGE.
 #include "Dps310.h"
 #include "ST480.h"
 #include "parameter.h"
-#include "GpsUbx.h"
+#include "GpsNmea.h"
 #include "pwm_driver.h"
 #include "led.h"
 #include "adc_driver.h"
 #include "sbus_usart.h"
 #include "functions.h"
 #include "Variables.h"
-#include "systick.h"
 //#include "cdc_acm_core.h"
 
 
@@ -67,25 +66,13 @@ OF SUCH DAMAGE.
 PARAMETER_SAVE *g_poParameter = NULL;
 
 
-//extern uint16_t Decode_Finish_Flag;
-//extern uint16_t Channel_received_value[16];
+extern uint16_t Decode_Finish_Flag;
+extern uint16_t Channel_received_value[16];
 
-void task_1ms(float dti)
-{
-}
-
-void task_4ms(void)
-{
-}
-
-void task_20ms(void)
-{
-    Count = 1;
-}
-
-void task_500ms(void)
-{
-}
+extern void task_1ms(float dti);
+extern void task_4ms(void);
+extern void task_20ms(void);
+extern void task_500ms(void);
 
 #define PERFORMANCE_TEST
 
@@ -211,42 +198,6 @@ void Uart3Test(void)
     }
 }
 
-int GpsStructTest(SENSOR_RAW_DATA *poSensor)
-{
-#if 0
-    UBX_NAV_CMD_PAYLOAD oPayLoad;
-    UBX_NAV_PVT_PAYLOAD oPvt = {39500,2019,7,3,9,19,54,3,12345678,7562,3,1,1,12,1132544400,235433300,
-    79340,79340,150,150,1000,1200,3400,1700,231,400,32,45,16,{455,457,461}};
-    U8 abyBuff[128];
-    
-    MyMemCpy(abyBuff, &oPvt, sizeof(UBX_NAV_PVT_PAYLOAD));
-#endif
-    return 0;
-}
-
-SENSOR_RAW_DATA oSensorData;
-
-int gs_iGpsReceiveFinishFlag = 0;
-void GpsParseCall(void)
-{
-    int iRet;
-    iRet = GpsGetParseUbxInfo(&oSensorData.oGpsInfo);
-    if (0 == iRet)
-    {
-         gs_iGpsReceiveFinishFlag = 1;
-    }
-}
-
-int GpsGetUbxInfo(UBX_INFO_PAYLOAD *poUbxInfo)
-{
-    if (1 == gs_iGpsReceiveFinishFlag)
-    {
-        gs_iGpsReceiveFinishFlag = 0;
-        return 0;
-    }
-    return 1;
-}
-
 
 LogData g_oLog;  
 extern int ICM20600_CalibrationAndSaveParameter(int iCalibrateTimes);
@@ -269,34 +220,20 @@ void UsbSendCount(U32 dwCount)
     cdc_acm_data_send(&usb_device_dev, abyTemp, 4);
 }
 */
-float CPUT12;
-long Count;
 uint32_t cnt = 0;
-U16 g_awGpsTestBuff[1024];
-int g_iTestCount = 0;
-int iStampErrorCount = -1;
-int iPacketNumber = 0;
 int main(void)
 {
+    extern SENSOR_RAW_DATA oSensorData;
     U32 dwLastTimeMs, dwCurTimeMs, dwCycleCount;
     int i, iRet, iImuCalibrationCount = 0;// iMagCabrationCount = 0;
     float dt;
     long long _imu_data_timestamp, Nowtimestamp;
     static int s_iImuCalibrationFlag = 0;
-	
-    U64 qwStart, qwEnd;
-    U32 dwGps;
-#if NTX		
-	  U32 dwTemp,dwMax = 0;
-
+//    U64 qwStart, qwEnd;
     float fTemp;
 
     float Acctmp, Gyrotmp;
-#endif	
-    float Acc_K[3];
-#if NTX
-	  float Acc_bias[3];
-#endif
+    float Acc_K[3], Acc_bias[3];
 #if 0  
     // for app address start at 0x08008000
     __enable_irq();
@@ -312,7 +249,6 @@ int main(void)
 
 //    Usart0Test();
 //    Uart3Test();
-//    GpsStructTest(&oSensorData);
 
     g_poParameter = LoadParameter();
 
@@ -326,15 +262,7 @@ int main(void)
     motor_init();
     led_init();
     adc_init();
-#if 1
     SbusInit();
-#else
-
-    RF_Init(); 
-    rf_link_init();  
-    rf_binding();
-    wifi_link_init();
-#endif
     
 //    usb_init();
 
@@ -354,8 +282,8 @@ int main(void)
 
     //µÆ¼°µç»ú²âÊÔ
     set_led_scram_flicker();
-//    DelayMs(5000);
-    iRet = GpsInit();
+    DelayMs(5000);
+    GpsInit();
 
     CPUT12 = GetTimeStampUs();
     _imu_data_timestamp = CPUT12;
@@ -367,45 +295,12 @@ int main(void)
         CPUT12 = CPUT12*1.0e-6f;
         // Step 1.check GPS update with 10 Hz and call with 20Hz
         // Step 1.check GPS update with 10 Hz and call with 2Hz
-        GpsParseCall();
-        
         if (0 == (dwCycleCount % 100))
         {
 ///            UsbSendCount(dwCycleCount);
-            iRet = GpsGetUbxInfo(&oSensorData.oGpsInfo);
+            iRet = GpsGetNmeaInfo(&oSensorData.oGpsInfo);
             if (0 == iRet)
             {
-#if 0
-                dwGps = GetTimeStamp10Us();
-                if (dwGps > oSensorData.oGpsInfo.dwTimeStamp10Us)
-                {
-                    dwTemp = dwGps - oSensorData.oGpsInfo.dwTimeStamp10Us;
-                }
-                g_awGpsTestBuff[g_iTestCount] = (U16)(dwTemp&0xffff);
-                g_iTestCount++;
-                g_iTestCount %= 1024;
-                if (dwTemp > dwMax)
-                {
-                    dwMax = dwTemp;
-                }
-                CPUT12 = dwMax;
-#else
-                if (-1 == iStampErrorCount)
-                {
-                    dwGps = oSensorData.oGpsInfo.oPvt.dwITow;
-                    iStampErrorCount = 0;
-                }
-                else
-                {
-                    if ((oSensorData.oGpsInfo.oPvt.dwITow - dwGps) > 120)
-                    {
-                        iStampErrorCount++;
-                    }
-                    iPacketNumber++;
-                    dwGps = oSensorData.oGpsInfo.oPvt.dwITow;
-                CPUT12 = iStampErrorCount;
-                }
-#endif
                 oSensorData.m_iGpsUpdateFlag = SENSOR_DATA_HAS_UPDATE;
             }
         }
@@ -420,8 +315,6 @@ int main(void)
 #endif
 
         // Step 2.check app data from WIFI
-//        wifi_link_data_receive();
-//        wifi_link_data_send();
 
 
         // Step 3.check 2.4G Hz module receive control from remote control
@@ -507,12 +400,10 @@ int main(void)
             led_flicker();
         }
 
-#if 1
+
         // sbus receive check
         oSensorData.m_iSbusUpdateFlag = SbusReceiveData(oSensorData.m_awSbusData); // update cycle is 7ms/14ms.
-#else
-        rf_link_function();        
-#endif
+
         
         // Step 7.call fusion algorithm function
 
@@ -521,30 +412,15 @@ int main(void)
 
         if (((dwCycleCount % 4) == 0))
         {
- //           qwStart = GetTimeStampUs();
-            task_4ms(); // 11us
- //           qwEnd = GetTimeStampUs();
- //           Acc_K[0] = qwEnd;
-//            Acc_K[1] = qwStart;
-//            Acc_K[2] = Acc_K[0] + Acc_K[1];
+            task_4ms();
         }
         if (((dwCycleCount % 500) == 0))
         {
-            qwStart = GetTimeStampUs();
             task_500ms();
-            qwEnd = GetTimeStampUs();
-            Acc_K[0] = qwEnd;
-            Acc_K[0] = qwStart;
-            Acc_K[1] = qwEnd - Acc_K[0];
         }
         if (((dwCycleCount % 12) == 0))
         {
-            qwStart = GetTimeStampUs();
             task_20ms();
-            qwEnd = GetTimeStampUs();
-            Acc_K[0] = qwEnd;
-            Acc_K[0] = qwStart;
-            Acc_K[2] = qwEnd - Acc_K[0];
             if (Count > 0)
             {
                 EMMcSave();

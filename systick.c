@@ -88,17 +88,6 @@ U64 GetTimeStampUs(void)
     return qwTemp;
 }
 
-// 11.9 hours over flow
-U32 GetTimeStamp10Us(void)
-{
-    U32 dwTemp;
-    
-    dwTemp = gs_dwTickCounterMs;
-    dwTemp *= 100;
-    dwTemp += ((SysTick->LOAD + 1 - SysTick->VAL) / 1200);
-    return dwTemp;
-}
-
 
 
 U32 GetTickCountMs(void)

@@ -7,7 +7,7 @@
 void adc_init(void);
 //获得电池电压 访问频率100Hz
 float get_battery_voltage(void);
-float get_plane_battery_voltage_value(void);
+
 
 #endif
 

@@ -40,7 +40,7 @@ typedef enum _SPI_DEVICE_{
 
 SPIBaseDefine *SpiOpen(SPI_DEVICE eDevice);
 
-int SpiWriteReadByte(SPIBaseDefine *poHandle, U8 WriteByte, U8 *pbyReadOut);
+U8 SpiWriteReadByte(SPIBaseDefine *poHandle, U8 WriteByte);
 
 int SpiReadDataBlock(SPIBaseDefine *poHandle, U8 byRegAddr, U8 *pbyDataOut, int iWantReadLen);
 

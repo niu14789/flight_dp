@@ -10,8 +10,7 @@
       <TargetName>BotanFcs</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>5060750::V5.06 update 6 (build 750)::ARMCC</pCCUsed>
-      <uAC6>0</uAC6>
+      <pCCUsed>5060422::V5.06 update 4 (build 422)::ARMCC</pCCUsed>
       <TargetOption>
         <TargetCommonOption>
           <Device>GD32F303RC</Device>
@@ -137,8 +136,8 @@
             <DriverSelection>4099</DriverSelection>
           </Flash1>
           <bUseTDR>1</bUseTDR>
-          <Flash2>BIN\UL2CM3.DLL</Flash2>
-          <Flash3></Flash3>
+          <Flash2>Segger\JL2CM3.dll</Flash2>
+          <Flash3>"" ()</Flash3>
           <Flash4>.\JLinkSettings.ini</Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -184,7 +183,6 @@
             <hadXRAM>0</hadXRAM>
             <uocXRam>0</uocXRam>
             <RvdsVP>2</RvdsVP>
-            <RvdsMve>0</RvdsMve>
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
@@ -312,7 +310,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>4</Optim>
+            <Optim>1</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -325,7 +323,6 @@
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
             <uC99>1</uC99>
-            <uGnu>0</uGnu>
             <useXO>0</useXO>
             <v6Lang>3</v6Lang>
             <v6LangP>3</v6LangP>
@@ -338,7 +335,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\Lib\CMSIS\GD\GD32F30x\Include;..\Lib\CMSIS;..\Lib\GD32F30x_standard_peripheral\Include;..\Utilities;..\;C:\Keil_v5\ARM\Pack\ARM\CMSIS\4.2.0\CMSIS\Include;..\sensor\Dps310;..\sensor\Gps;..\sensor\ICM20600;..\sensor\Calibration;..\sensor\ST480;..\driver\SPI;..\driver\InternalFlash;..\driver\Parameter;..\driver\Usart;..\user\TEST;..\link;..\driver\PWM;..\driver\led;..\driver\adc;..\driver\sbus;..\Lib\GD32F30x_usbd_driver\Include;..\driver\CdcAcm;..\driver\I2C;..\driver\XN297L</IncludePath>
+              <IncludePath>..\Lib\CMSIS\GD\GD32F30x\Include;..\Lib\CMSIS;..\Lib\GD32F30x_standard_peripheral\Include;..\Utilities;..\;C:\Keil_v5\ARM\Pack\ARM\CMSIS\4.2.0\CMSIS\Include;..\sensor\Dps310;..\sensor\Gps;..\sensor\ICM20600;..\sensor\Calibration;..\sensor\ST480;..\driver\SPI;..\driver\InternalFlash;..\driver\Parameter;..\driver\Usart;..\user\TEST;..\link;..\driver\PWM;..\driver\led;..\driver\adc;..\driver\sbus;..\Lib\GD32F30x_usbd_driver\Include;..\driver\CdcAcm;..\driver\I2C</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -558,6 +555,11 @@
           <GroupName>Driver</GroupName>
           <Files>
             <File>
+              <FileName>cdc_acm_core.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\CdcAcm\cdc_acm_core.c</FilePath>
+            </File>
+            <File>
               <FileName>SerialPort.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\driver\Usart\SerialPort.c</FilePath>
@@ -618,6 +620,11 @@
               <FilePath>..\sensor\Dps310\dps310.c</FilePath>
             </File>
             <File>
+              <FileName>GpsNmea.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\sensor\Gps\GpsNmea.c</FilePath>
+            </File>
+            <File>
               <FileName>ICM20600.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\sensor\ICM20600\ICM20600.c</FilePath>
@@ -637,21 +644,52 @@
               <FileType>1</FileType>
               <FilePath>..\sensor\Calibration\MagnetoCalibration.c</FilePath>
             </File>
-            <File>
-              <FileName>GpsUbx.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\sensor\Gps\GpsUbx.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>link</GroupName>
+          <Files>
+            <File>
+              <FileName>wifi_link.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\link\wifi_link.c</FilePath>
+            </File>
+          </Files>
         </Group>
         <Group>
           <GroupName>GD32F30x_usbd_driver</GroupName>
+          <Files>
+            <File>
+              <FileName>usbd_core.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Lib\GD32F30x_usbd_driver\Source\usbd_core.c</FilePath>
+            </File>
+            <File>
+              <FileName>usbd_int.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Lib\GD32F30x_usbd_driver\Source\usbd_int.c</FilePath>
+            </File>
+            <File>
+              <FileName>usbd_pwr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Lib\GD32F30x_usbd_driver\Source\usbd_pwr.c</FilePath>
+            </File>
+            <File>
+              <FileName>usbd_std.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Lib\GD32F30x_usbd_driver\Source\usbd_std.c</FilePath>
+            </File>
+          </Files>
         </Group>
         <Group>
           <GroupName>Lib</GroupName>
+          <Files>
+            <File>
+              <FileName>Fclib.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\Lib\base\Fclib.lib</FilePath>
+            </File>
+          </Files>
         </Group>
         <Group>
           <GroupName>::CMSIS</GroupName>
