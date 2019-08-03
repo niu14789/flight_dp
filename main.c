@@ -47,7 +47,7 @@
 int main(void)
 {
 	/* set nvic IRQ proup */
-	nvic_priority_group_set(NVIC_PRIGROUP_PRE2_SUB2);
+	nvic_priority_group_set(NVIC_PRIGROUP_PRE3_SUB1);
 	/* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
 	/* system init */

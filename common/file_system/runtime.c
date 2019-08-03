@@ -157,7 +157,8 @@ int system_start(int argc)
   { 
 		 if( argc_wide & ( 1 << i ) )
 		 {
-			  nvic_irq_enable(irqn[i], 0, i);
+			  /* enable all init */
+				nvic_irq_enable(irqn[i], i, 0);
 			  /* enable the irq */
 			  NVIC_EnableIRQ((IRQn_Type)irqn[i]);
 		 }
@@ -186,6 +187,7 @@ void TIMER2_IRQHandler(void)
   timer_interrupt_flag_clear(TIMER2, TIMER_INT_FLAG_UP);
 	/* about a ms */
 	shell_timer_thread(0);
+	/* end of data */
 }
 void TIMER3_IRQHandler(void)
 {
@@ -193,6 +195,7 @@ void TIMER3_IRQHandler(void)
   timer_interrupt_flag_clear(TIMER3, TIMER_INT_FLAG_UP);
 	/* about a ms */
 	shell_timer_thread(1);
+	/* end of data */
 }
 void TIMER4_IRQHandler(void)
 {
@@ -200,6 +203,7 @@ void TIMER4_IRQHandler(void)
   timer_interrupt_flag_clear(TIMER4, TIMER_INT_FLAG_UP);
 	/* about a ms */
 	shell_timer_thread(2);
+  /* end of data */
 }
 void TIMER5_IRQHandler(void)
 {
@@ -207,6 +211,7 @@ void TIMER5_IRQHandler(void)
   timer_interrupt_flag_clear(TIMER5, TIMER_INT_FLAG_UP);
 	/* about a ms */
 	shell_timer_thread(3);
+	/* end of data */
 }
 void TIMER6_IRQHandler(void)
 {
@@ -214,6 +219,7 @@ void TIMER6_IRQHandler(void)
   timer_interrupt_flag_clear(TIMER6, TIMER_INT_FLAG_UP);
 	/* about a ms */
 	shell_timer_thread(4);
+	/* end of data */
 }
 
 

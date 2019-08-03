@@ -1,24 +1,146 @@
-#include "gd32f30x.h"
-#include "systick.h"
-#include <stdio.h>
-#include <string.h>
-#include "led.h"
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : notify.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by ST under BSD 3-Clause license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/BSD-3-Clause
+  *
+  ******************************************************************************
+	* BEEP TIM3 CHANNEL1 PWM Gerente
+	* LED is TIM4 CH3 and CH4
+  */
+/* USER CODE END Header */
 
+/* Includes ------------------------------------------------------------------*/
+#include "fs.h"
+#include "f_shell.h"
+#include "string.h"
+#include "gd32f30x.h"
+/* functions declare */
+static int led_heap_init(void);
+static int led_default_config(void);
+static void led_thread_1(void);
+static void led_thread_2(void);
+static void led_thread_3(void);
+static void led_thread_4(void);
+/* fs inode system register */
+FS_INODE_REGISTER("/led.o",led,led_heap_init,0);
+
+FS_SHELL_STATIC(task500ms,led_thread_4,4,_CB_TIMER_|_CB_IT_IRQN_(TASK_PERIOD4_ID));
+
+/* led hardware default */
+const unsigned int leds_hd[4][3] = 
+{
+   { RCU_GPIOB , GPIOB , GPIO_PIN_14 },
+   { RCU_GPIOB , GPIOB , GPIO_PIN_15 },
+   { RCU_GPIOC , GPIOC , GPIO_PIN_1  },
+   { RCU_GPIOC , GPIOC , GPIO_PIN_0  }
+};
+/* heap init */
+static int led_heap_init(void)
+{
+  /* full of zero */
+	memset(&led,0,sizeof(led));
+	/* shell base */
+	led.shell_i = shell_sched_getfiles();
+	/* driver config */
+	led.config = led_default_config;
+	/* file interface */
+	led.flip.f_inode = &led;
+	led.flip.f_path = "/led.o";
+	/* heap */
+	
+	/* add your own code here */
+  led.i_flags = __FS_IS_INODE_OK|__FS_IS_INODE_INIT; 	
+	/* return ok */
+	return FS_OK;
+}
+/* led_default_config led init */
+static int led_default_config(void)
+{
+	/* config GPIOS */
+	for( unsigned int i = 0 ; i < sizeof(leds_hd) / sizeof(leds_hd[0]) ; i ++ )
+	{
+		/* enable gpio 's clock */
+		rcu_periph_clock_enable((rcu_periph_enum)leds_hd[i][0]);
+		/* configration gpios */
+		gpio_init(leds_hd[i][1], GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, leds_hd[i][2]);
+		/* end of file */
+	}
+	/* create a led thread */
+	shell_create_dynamic("led_thread_1",led_thread_1,0/* as 1 ms task */);
+	shell_create_dynamic("led_thread_2",led_thread_2,1/* as 1 ms task */);
+	shell_create_dynamic("led_thread_3",led_thread_3,2/* as 1 ms task */);
+//	shell_create_dynamic("led_thread_4",led_thread_4,3/* as 1 ms task */);
+	/* return a ok */
+	return FS_OK;
+}
+/* for a task test */
+static void led_thread_1(void)
+{
+	static unsigned int led_ctrl = 0;
+	
+	if( led_ctrl++ % 2 )
+	{
+	  gpio_bit_set(leds_hd[0][1], leds_hd[0][2]);
+	}
+	else
+	{
+		gpio_bit_reset(leds_hd[0][1], leds_hd[0][2]);
+	}
+}
+static void led_thread_2(void)
+{
+	static unsigned int led_ctrl = 0;
+	
+	if( led_ctrl++ % 2 )
+	{
+	  gpio_bit_set(leds_hd[1][1], leds_hd[1][2]);
+	}
+	else
+	{
+		gpio_bit_reset(leds_hd[1][1], leds_hd[1][2]);
+	}
+}
+static void led_thread_3(void)
+{
+	static unsigned int led_ctrl = 0;
+	
+	if( led_ctrl++ % 2 )
+	{
+	  gpio_bit_set(leds_hd[2][1], leds_hd[2][2]);
+	}
+	else
+	{
+		gpio_bit_reset(leds_hd[2][1], leds_hd[2][2]);
+	}
+}
+static void led_thread_4(void)
+{
+	static unsigned int led_ctrl = 0;
+	
+	if( led_ctrl++ % 2 )
+	{
+	  gpio_bit_set(leds_hd[3][1], leds_hd[3][2]);
+	}
+	else
+	{
+		gpio_bit_reset(leds_hd[3][1], leds_hd[3][2]);
+	}
+}
+#if 0
 led_function_s m_led_func;
 
-typedef struct
-{
-    uint32_t gpio_periph;
-    uint32_t pin;
-} led_t;
 
-static led_t leds[LED_NUM] =
-{
-   {GPIOA, GPIO_PIN_8},
-   {GPIOC, GPIO_PIN_9},
-   {GPIOC, GPIO_PIN_1},
-   {GPIOC, GPIO_PIN_0}
-};
 
 /* ÉèÖÃÄ³¸öLEDµÄ×´Ì¬ */
 static void led_set(led_e led, bool value)
@@ -300,6 +422,7 @@ void led_flicker(void)
         break;
     }
 }
+#endif
 
 
 
