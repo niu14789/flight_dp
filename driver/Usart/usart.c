@@ -32,9 +32,14 @@
 static int usart_heap_init(void);
 static int usart_default_config(void);
 static int usart_write( unsigned int usart_periph , void * data , unsigned int len );
+static int usart_init_global( uart_config_msg * msg );
 /* fs inode system register */
 FS_INODE_REGISTER("/USART/",usart,usart_heap_init,0);
-
+/* usart code */
+const unsigned int usart_msg[5][9] = {
+{ USART0,GPIOA,GPIO_PIN_9/* tx pin */,GPIOA,GPIO_PIN_10/* rx pin */,
+  DMA0,DMA_CH3/* TX DMA */,DMA0,DMA_CH4/* RX DMA */},
+};
 /* heap init */
 static int usart_heap_init(void)
 {
@@ -54,48 +59,71 @@ static int usart_heap_init(void)
 	/* return ok */
 	return FS_OK;	
 }
+
+
+static unsigned char dma_receive_buffer[256];
+
 /* usart_default_config */
 static int usart_default_config(void)
 {
-
+  uart_config_msg msg;
+	
+	msg.baudrate = 115200;
+	msg.index = 0;
+	msg.rx_dma_buffer = (unsigned int)dma_receive_buffer;
+	msg.rx_dma_deepth = sizeof(dma_receive_buffer);
+	
+	usart_init_global(&msg);
 	/* return */
 	return FS_OK;
 }
 /* static usart init global */
 static int usart_init_global( uart_config_msg * msg )
 {
-	/* enable clock */
+	/* check param */
+	if( msg->index >= 5 )
+	{
+		return FS_ERR;/* bad index */
+	}
+	/* enable all gpio clock */
 	rcu_periph_clock_enable(RCU_GPIOA);
-
-	/* enable clock */
+  rcu_periph_clock_enable(RCU_GPIOB);
+	rcu_periph_clock_enable(RCU_GPIOC);
+  rcu_periph_clock_enable(RCU_GPIOD);	
+	/* enable all of usart ' s clock */
 	rcu_periph_clock_enable(RCU_USART0);
-
+  rcu_periph_clock_enable(RCU_USART1);
+	rcu_periph_clock_enable(RCU_USART2);
+	rcu_periph_clock_enable(RCU_UART3);
+	rcu_periph_clock_enable(RCU_UART4);
+	
 	/* connect port to USARTx_Tx */
-	gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_9);
+	gpio_init(usart_msg[msg->index][1], GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, usart_msg[msg->index][2]);
 
 	/* connect port to USARTx_Rx */
-	gpio_init(GPIOA, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, GPIO_PIN_10);
+	gpio_init(usart_msg[msg->index][3], GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, usart_msg[msg->index][4]);
 
 	/* UART configure */
 	/* reset uart/usart */
-	usart_deinit(USART0); 
+	usart_deinit(usart_msg[msg->index][0]); 
   /* configration */
-	usart_baudrate_set(USART0, 115200);
-	usart_word_length_set(USART0, USART_WL_8BIT);
-	usart_parity_config(USART0, USART_PM_NONE);
-	usart_stop_bit_set(USART0, USART_STB_1BIT);
+	usart_baudrate_set(usart_msg[msg->index][0], msg->baudrate);
+	usart_word_length_set(usart_msg[msg->index][0], USART_WL_8BIT);
+	usart_parity_config(usart_msg[msg->index][0], USART_PM_NONE);
+	usart_stop_bit_set(usart_msg[msg->index][0], USART_STB_1BIT);
   /* usart mode settings */
-	usart_receive_config(USART0, USART_RECEIVE_ENABLE);     // enable receive
-	usart_transmit_config(USART0, USART_TRANSMIT_ENABLE);   // enable send 	
+	usart_receive_config(usart_msg[msg->index][0], USART_RECEIVE_ENABLE);     // enable receive
+	usart_transmit_config(usart_msg[msg->index][0], USART_TRANSMIT_ENABLE);   // enable send 	
 	/* enable usart 0 */
-	usart_enable(USART0);
+	usart_enable(usart_msg[msg->index][0]);
 	
   /* dma config blove */
   dma_parameter_struct DmaInitParam;
   /* enable clock */
   rcu_periph_clock_enable(RCU_DMA0);
 	/* DMA TX MODE config */
-	dma_deinit(DMA0, DMA_CH3);
+	dma_deinit(usart_msg[msg->index][5], (dma_channel_enum)usart_msg[msg->index][6]);
+	/* init param */
 	DmaInitParam.direction = DMA_MEMORY_TO_PERIPHERAL;
 	DmaInitParam.memory_addr = 0;
 	DmaInitParam.memory_inc = DMA_MEMORY_INCREASE_ENABLE;
@@ -106,31 +134,35 @@ static int usart_init_global( uart_config_msg * msg )
 	DmaInitParam.periph_width = DMA_PERIPHERAL_WIDTH_8BIT;
 	DmaInitParam.priority = DMA_PRIORITY_ULTRA_HIGH;
 	/* init */
-	dma_init(DMA0, DMA_CH3, &DmaInitParam);
+	dma_init(usart_msg[msg->index][5], (dma_channel_enum)usart_msg[msg->index][6], &DmaInitParam);
 	/* configure DMA mode */
-	dma_circulation_disable(DMA0, DMA_CH3);
-	dma_memory_to_memory_disable(DMA0, DMA_CH3);
+	dma_circulation_disable(usart_msg[msg->index][5], (dma_channel_enum)usart_msg[msg->index][6]);
+	dma_memory_to_memory_disable(usart_msg[msg->index][5], (dma_channel_enum)usart_msg[msg->index][6]);
 	/* USART DMA enable for transmission */
-	usart_dma_transmit_config(USART0, USART_DENT_ENABLE);
+	usart_dma_transmit_config(usart_msg[msg->index][0], USART_DENT_ENABLE);
 	/* enable DMA channel1 */
-	dma_channel_disable(DMA0, DMA_CH3);
+	dma_channel_disable(usart_msg[msg->index][5], (dma_channel_enum)usart_msg[msg->index][6]);
 
 	/* DMA RX MODE CONFIG */
-	dma_deinit(DMA0, DMA_CH4);
+	dma_deinit(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8]);
 	/* set param */
 	DmaInitParam.direction = DMA_PERIPHERAL_TO_MEMORY;
-	DmaInitParam.memory_addr = (unsigned int)dma_receive_buffer;
-	DmaInitParam.number = sizeof(dma_receive_buffer);
+	/* set receive buffer */
+	DmaInitParam.memory_addr = msg->rx_dma_buffer;
+	DmaInitParam.number = msg->rx_dma_deepth;
+	/* others */
 	DmaInitParam.priority = DMA_PRIORITY_ULTRA_HIGH;
 	/* init */	
-	dma_init(DMA0, DMA_CH4, &DmaInitParam);
+	dma_init(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8], &DmaInitParam);
 	/* configure DMA mode */	
-	dma_circulation_enable(DMA0, DMA_CH4);
-	dma_memory_to_memory_disable(DMA0, DMA_CH4);
+	dma_circulation_enable(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8]);
+	dma_memory_to_memory_disable(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8]);
 	/* enable usart0 dma receive mode */
-	usart_dma_receive_config(USART0, USART_DENR_ENABLE);
+	usart_dma_receive_config(usart_msg[msg->index][0], USART_DENR_ENABLE);
 	/* enable dma */
-	dma_channel_enable(DMA0, DMA_CH4);		
+	dma_channel_enable(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8]);		
+	/* ok . we've finished . now return */
+	return FS_OK;
 }
 /* int usart0 dma tx */
 static int usart_write( unsigned int usart_periph , void * data , unsigned int len )

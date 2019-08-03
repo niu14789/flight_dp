@@ -57,7 +57,7 @@ typedef struct uart_config_msg_s
 	unsigned short tx_mode;//TX:0x0000 0000 (tx,rx),0x0001:byte send,0x0002:dma  
 	unsigned short rx_mode;//Rx:0x0001,IT timeout,0x0002 dma LLI receive 0x0003 byte interrupt without dma
 	unsigned int   index;
-	unsigned char *rx_dma_buffer;//rx buffer that 
+	unsigned int   rx_dma_buffer;//rx buffer that 
 }uart_config_msg;
 /* end uart */
 
