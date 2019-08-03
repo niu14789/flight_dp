@@ -1,6 +1,27 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : notify.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by ST under BSD 3-Clause license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/BSD-3-Clause
+  *
+  ******************************************************************************
+	* BEEP TIM3 CHANNEL1 PWM Gerente
+	* LED is TIM4 CH3 and CH4
+  */
+/* USER CODE END Header */
 
+/* Includes ------------------------------------------------------------------*/
 /* header */
-#include "cmsis_os.h"
 #include "fs.h"
 #include "f_shell.h"
 #include "string.h"
@@ -18,48 +39,48 @@ static int system_insert(inode_vmn * p_vmn)
 	/* ignore first time */
 	if(p_vmn_link_header != (void*)0)
 	{
-			// some default
-			struct inode * base;
-			/* judge */
-			for( base = p_vmn_link_header->inode ; base != 0 ; base = base->i_peer )
+		// some default
+		struct inode * base;
+		/* judge */
+		for( base = p_vmn_link_header->inode ; base != 0 ; base = base->i_peer )
+		{
+			//zero
+			if( base->i_child == 0 )
 			{
-					//zero
-					if( base->i_child == 0 )
-					{
-						// from start
-						if( p_vmn->inode->i_crefs > base->i_crefs )
-						{
-							 p_vmn->inode->i_peer = base;
-							 base->i_child = p_vmn->inode;
-							 p_vmn->inode->i_child = 0;
-							 p_vmn_link_header = p_vmn;
-							 /* break */
-							 break;
-						}
-					}
-					/*-------------------*/
-					if( base->i_peer == 0 )
-					{
-						//last one
-						base->i_peer = p_vmn->inode;
-						p_vmn->inode->i_child = base;
-						p_vmn->inode->i_peer = 0;
-						/*----------------------------*/
-						break;
-						/*----------------------------*/
-					}else
-					{
-						if( p_vmn->inode->i_crefs <= base->i_crefs && p_vmn->inode->i_crefs > base->i_peer->i_crefs )
-						{
-							 base->i_peer->i_child = p_vmn->inode;
-							 p_vmn->inode->i_child = base;
-							 p_vmn->inode->i_peer = base->i_peer;
-							 base->i_peer = p_vmn->inode;
-							 /* break */
-							 break;
-						}
-					}
+				// from start
+				if( p_vmn->inode->i_crefs > base->i_crefs )
+				{
+					 p_vmn->inode->i_peer = base;
+					 base->i_child = p_vmn->inode;
+					 p_vmn->inode->i_child = 0;
+					 p_vmn_link_header = p_vmn;
+					 /* break */
+					 break;
+				}
 			}
+			/*-------------------*/
+			if( base->i_peer == 0 )
+			{
+				//last one
+				base->i_peer = p_vmn->inode;
+				p_vmn->inode->i_child = base;
+				p_vmn->inode->i_peer = 0;
+				/*----------------------------*/
+				break;
+				/*----------------------------*/
+			}else
+			{
+				if( p_vmn->inode->i_crefs <= base->i_crefs && p_vmn->inode->i_crefs > base->i_peer->i_crefs )
+				{
+					 base->i_peer->i_child = p_vmn->inode;
+					 p_vmn->inode->i_child = base;
+					 p_vmn->inode->i_peer = base->i_peer;
+					 base->i_peer = p_vmn->inode;
+					 /* break */
+					 break;
+				}
+			}
+		}
 	}
 	else
 	{
@@ -67,6 +88,8 @@ static int system_insert(inode_vmn * p_vmn)
 	}
 	return 0;
 }
+/* allocate supple or not */
+#if ALLOCATE_EXAPP_SUPPLY /* Whether Extended Applications are Supported */	
 /* search inode */
 static inode_vmn * inode_search(unsigned int base , unsigned int size , unsigned int *base_offset)
 {
@@ -83,43 +106,46 @@ static inode_vmn * inode_search(unsigned int base , unsigned int size , unsigned
 		/* search loop */
 		for( ; i < size ; i += 4 )
 		{
-				if(id_enter->id_l == 0xAFBC562D && 
-					 id_enter->id_h == 0x2b74113c)
+			if(id_enter->id_l == 0xAFBC562D && 
+				 id_enter->id_h == 0x2b74113c)
+			{
+				/* check */
+				if( (unsigned int)id_enter->entrance > base &&
+						(unsigned int)id_enter->entrance < ( base + size ) )
 				{
-						/* check */
-						if( (unsigned int)id_enter->entrance > base &&
-							  (unsigned int)id_enter->entrance < ( base + size ) )
-						{
-							/* ------------ */
-							i += 4;
-							/*--------------*/
-							p = (inode_vmn *)(((int(*)(void))id_enter->entrance)());
-							/*--------------*/
-							*base_offset = i;
-							/*--------------*/
-							return p;							
-						}
+					/* ------------ */
+					i += 4;
+					/*--------------*/
+					p = (inode_vmn *)(((int(*)(void))id_enter->entrance)());
+					/*--------------*/
+					*base_offset = i;
+					/*--------------*/
+					return p;							
 				}
-				/* incremter */
-				id_enter = (inode_identify *)(((unsigned int)id_enter) + 4);
-				/* end file decateltes */
-				if( end_file_dec[0] == 0xF1F2F3F4 && 
-					  end_file_dec[1] == 0xE1E2E3E4 && 
-				    end_file_dec[2] == 0xD1D2D3D4 )
-				{
-					/* end of file */
-					return NULL;
-				}
-				/*---------------------*/
-				end_file_dec ++;
-				/*---------------------*/
+			}
+			/* incremter */
+			id_enter = (inode_identify *)(((unsigned int)id_enter) + 4);
+			/* end file decateltes */
+			if( end_file_dec[0] == 0xF1F2F3F4 && 
+					end_file_dec[1] == 0xE1E2E3E4 && 
+					end_file_dec[2] == 0xD1D2D3D4 )
+			{
+				/* end of file */
+				return NULL;
+			}
+			/*---------------------*/
+			end_file_dec ++;
+			/*---------------------*/
 		}
 		/* cannot found */
 		return NULL;
 		/*--------------*/	
 }
+#endif
+/* inode start */
 static inode_vmn * inode_start(int seq)
 {
+#if ALLOCATE_EXAPP_SUPPLY  /* Whether Extended Applications are Supported */	
 	const unsigned int base[][2] = 
   {
 		{ALLOCATE_RAM_ROM_START_ADDR,ALLOCATE_RAM_ROM_SIZE},
@@ -129,51 +155,56 @@ static inode_vmn * inode_start(int seq)
 		{0x490000,20*1024},
 #endif		
 	};
+	#endif
 	/*-------------------*/
 	if( seq == 0 )
 	{
-		  /* define the start inode */
-			inode_vmn * p_vmn_start = inode_sched_getfiles();
-			/*
-			* set the default setting
-			*/
-			if(p_vmn_start != (void*)0)
-			{ 
-					p_vmn_start->inode->max.inode_max = inode_sched_limit();
-					p_vmn_start->inode->max.shell_max = shell_sched_limit();
-					p_vmn_start->inode->shell_i = shell_sched_getfiles();
-			}
-			/* ok find */
-			return p_vmn_start;//inode of base files end of the file
+		/* define the start inode */
+		inode_vmn * p_vmn_start = inode_sched_getfiles();
+		/*
+		* set the default setting
+		*/
+		if(p_vmn_start != (void*)0)
+		{ 
+			p_vmn_start->inode->max.inode_max = inode_sched_limit();
+			p_vmn_start->inode->max.shell_max = shell_sched_limit();
+			p_vmn_start->inode->shell_i = shell_sched_getfiles();
+		}
+		/* ok find */
+		return p_vmn_start;//inode of base files end of the file
   }
 	else if( seq >= 1 )
 	{   
-		  /* initial some tasks */
-		  static unsigned int cnt = 0;
-		  static unsigned char step = 0;
-		  /* start the gate */
-		  inode_vmn * p = inode_search(base[step][0],base[step][1],&cnt);
-		  /* ok ? */
-		  if( p == NULL )
+#if ALLOCATE_EXAPP_SUPPLY	/* Whether Extended Applications are Supported */		
+		/* initial some tasks */
+		static unsigned int cnt = 0;
+		static unsigned char step = 0;
+		/* start the gate */
+		inode_vmn * p = inode_search(base[step][0],base[step][1],&cnt);
+		/* ok ? */
+		if( p == NULL )
+		{
+			//clear the tourism
+			cnt = 0;
+			/* switch the base */
+			step++;
+			/*-----------------*/
+			if( step >= sizeof(base)/sizeof(base[0]))
 			{
-				//clear the tourism
-				cnt = 0;
-				/* switch the base */
-				step++;
-				/*-----------------*/
-				if( step >= sizeof(base)/sizeof(base[0]))
-				{
-					return NULL;//It's over
-				}
-				/* switch the base addr */
-				return inode_search(base[step][0],base[step][1],&cnt);
-			}				
-		  /* return p */
-			return p;
+				return NULL;//It's over
+			}
+			/* switch the base addr */
+			return inode_search(base[step][0],base[step][1],&cnt);
+		}				
+		/* return p */
+		return p;
+#else
+     return NULL;
+#endif		
 	}
 	else
 	{
-		  return NULL;
+		return NULL;
 	}
 }
 /* config */
@@ -302,7 +333,8 @@ static int heap_init_inode(void)
 	/* int inode */
   for(p_start = p_inode;p_start != (void*)0;p_start = p_start->i_peer)
   {	
-		 if( p_start->shell_i != 0 && ((((unsigned int)p_start->shell_i)>>20) == 0x204) && p_start->shell_i != shell_i )
+		 if( p_start->shell_i != 0 && ((((unsigned int)p_start->shell_i)>>20) == 0x200) && 
+			   p_start->shell_i != shell_i )
 		 {
 			 shell_i = p_start->shell_i;
 			 /* init */
@@ -344,7 +376,8 @@ int fs_system_initialization(void)
 		 if( base != NULL )
 		 {
 			 inode_max = base->inode->max.inode_max;
-		 }else
+		 }
+		 else
 		 {
 			 if(seq)
 			 {
@@ -353,7 +386,7 @@ int fs_system_initialization(void)
 					/* config init */
 					config_inode();
 					/* --------- */
-					 shell_execute("system_start",0xfff);
+					shell_execute("system_start",0xfff);
 					/* -- start system -- */
 					return 0;
 			 }

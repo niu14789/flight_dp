@@ -280,6 +280,7 @@ FAR struct shell_cmd * shell_node_valid(void);
 FAR inode_vmn *inode_valid(void);
 FAR struct callback_t *cb_sched_getfiles(void);
 extern struct file * open(const char *path, int oflags);
+void task_run(int task_id);
 #endif /* FS_FS_H_ */
 
 
