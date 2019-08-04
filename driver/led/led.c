@@ -28,15 +28,11 @@
 /* functions declare */
 static int led_heap_init(void);
 static int led_default_config(void);
-//static void led_thread_1(void);
-//static void led_thread_2(void);
-//static void led_thread_3(void);
-//static void led_thread_4(void);
+static void led_thread(void);
 /* fs inode system register */
 FS_INODE_REGISTER("/led.o",led,led_heap_init,0);
-
-//FS_SHELL_STATIC(task500ms,led_thread_4,4,_CB_TIMER_|_CB_IT_IRQN_(TASK_PERIOD4_ID));
-
+/* as default , define a led task in 100ms */
+FS_SHELL_STATIC(led_thread,led_thread,4,_CB_TIMER_|_CB_IT_IRQN_(TASK_PERIOD3_ID));
 /* led hardware default */
 const unsigned int leds_hd[4][3] = 
 {
@@ -76,67 +72,28 @@ static int led_default_config(void)
 		gpio_init(leds_hd[i][1], GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, leds_hd[i][2]);
 		/* end of file */
 	}
-	/* create a led thread */
-//	shell_create_dynamic("led_thread_1",led_thread_1,0/* as 1 ms task */);
-//	shell_create_dynamic("led_thread_2",led_thread_2,1/* as 1 ms task */);
-//	shell_create_dynamic("led_thread_3",led_thread_3,2/* as 1 ms task */);
-//	shell_create_dynamic("led_thread_4",led_thread_4,3/* as 1 ms task */);
 	/* return a ok */
 	return FS_OK;
 }
-///* for a task test */
-//static void led_thread_1(void)
-//{
-//	static unsigned int led_ctrl = 0;
-//	
-//	if( led_ctrl++ % 2 )
-//	{
-//	  gpio_bit_set(leds_hd[0][1], leds_hd[0][2]);
-//	}
-//	else
-//	{
-//		gpio_bit_reset(leds_hd[0][1], leds_hd[0][2]);
-//	}
-//}
-//static void led_thread_2(void)
-//{
-//	static unsigned int led_ctrl = 0;
-//	
-//	if( led_ctrl++ % 2 )
-//	{
-//	  gpio_bit_set(leds_hd[1][1], leds_hd[1][2]);
-//	}
-//	else
-//	{
-//		gpio_bit_reset(leds_hd[1][1], leds_hd[1][2]);
-//	}
-//}
-//static void led_thread_3(void)
-//{
-//	static unsigned int led_ctrl = 0;
-//	
-//	if( led_ctrl++ % 2 )
-//	{
-//	  gpio_bit_set(leds_hd[2][1], leds_hd[2][2]);
-//	}
-//	else
-//	{
-//		gpio_bit_reset(leds_hd[2][1], leds_hd[2][2]);
-//	}
-//}
-//static void led_thread_4(void)
-//{
-//	static unsigned int led_ctrl = 0;
-//	
-//	if( led_ctrl++ % 2 )
-//	{
-//	  gpio_bit_set(leds_hd[3][1], leds_hd[3][2]);
-//	}
-//	else
-//	{
-//		gpio_bit_reset(leds_hd[3][1], leds_hd[3][2]);
-//	}
-//}
+/* for a task test */
+static void led_thread(void)
+{
+	static unsigned int led_ctrl = 0;
+	
+	if( (led_ctrl++ % 4) < 2 )
+	{
+		gpio_bit_set(leds_hd[1][1], leds_hd[1][2]);
+		gpio_bit_set(leds_hd[2][1], leds_hd[2][2]);
+		gpio_bit_set(leds_hd[3][1], leds_hd[3][2]);
+	}
+	else
+	{
+		gpio_bit_reset(leds_hd[1][1], leds_hd[1][2]);
+		gpio_bit_reset(leds_hd[2][1], leds_hd[2][2]);
+		gpio_bit_reset(leds_hd[3][1], leds_hd[3][2]);
+	}
+}
+
 #if 0
 led_function_s m_led_func;
 

@@ -97,7 +97,7 @@ static void gps_init_thread(void)
 		/* fail */
 		init_cnt++;
 		/* -------- */
-		if( init_cnt > 10 )
+		if( init_cnt > 3 )
 		{
 			/* delete init thread */
 			shell_delete_dynamic("gps_init_thread",0xff);
