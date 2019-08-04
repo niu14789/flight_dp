@@ -1,9 +1,26 @@
-/*
- * fs.h
- *
- *  Created on: 2016??4??19??
- *      Author: YJ-User17
- */
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : notify.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by ST under BSD 3-Clause license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/BSD-3-Clause
+  *
+  ******************************************************************************
+	* BEEP TIM3 CHANNEL1 PWM Gerente
+	* LED is TIM4 CH3 and CH4
+  */
+/* USER CODE END Header */
+
+/* Includes ------------------------------------------------------------------*/
 
 #ifndef __FS_H__
 #define __FS_H__
@@ -168,9 +185,9 @@ struct file
 {
   int               f_oflags; /* Open mode flags */ 
   FAR struct inode *f_inode;  /* Driver interface */
-  void             *f_priv;   /* Per file driver private data */
+  unsigned int      f_user0;   /* Per file driver private data */
   char             *f_path;   /* file path */
-	int               f_dev;    /* storage device identify */
+	unsigned int      f_user1;    /* storage device identify */
   int               f_multi;  /* open multiple files */
 #if 0
 	int               f_res;    /* result */
@@ -190,36 +207,35 @@ typedef struct
 	unsigned int length;
 }readdir_entrance_def;
 /*--------------------*/
+typedef struct
+{
+	/* high-end function just for storage's files */
+	int (*opendir)(const char *path);
+	int (*readir)(FAR struct file *filp, const char *path,readdir_entrance_def * buffer);
+	int (*mkdir)(const char *dir);
+	int (*mkfs)(unsigned char drv,unsigned char sfd,unsigned int au);
+	int (*lseek)(FAR struct file *filp, unsigned int offset, unsigned int whence);
+	int (*sync)(FAR struct file *filp);	
+	int (*close)(FAR struct file *filp);
+}STORAGE_DEV;
+/* file init */
 struct file_operations
 {  
-		/* The following methods must be identical in signature and position because
-		 * the struct file_operations and struct mountp_operations are treated like
-		 * unions.
-		 */
-		/* The device driver open method differs from the mountpoint open method */
-		struct file * (*open) (FAR struct file *filp);
-		int (*write)(FAR struct file *filp, FAR const char *buffer, unsigned int buflen);
-		unsigned int (*read )(FAR struct file *filp, FAR char *buffer, unsigned int buflen);
-		int (*lseek)(FAR struct file *filp, unsigned int offset, unsigned int whence);
-		int (*sync)(FAR struct file *filp);
-		int     (*close)(FAR struct file *filp);
-		int     (*ioctl)(FAR struct file *filp, int cmd, unsigned long arg,void *pri_data);
-		/* high-end function just for storage's files */
-		int     (*opendir)(const char *path);
-		int     (*readir)(FAR struct file *filp, const char *path,readdir_entrance_def * buffer);
-		int     (*mkdir)(const char *dir);
-		int     (*mkfs)(unsigned char drv,unsigned char sfd,unsigned int au);
+	/* The following methods must be identical in signature and position because
+	 * the struct file_operations and struct mountp_operations are treated like
+	 * unions.
+	 */
+	/* The device driver open method differs from the mountpoint open method */
+	struct file * (*open) (FAR struct file *filp);
+	int (*write)(FAR struct file *filp, FAR const void * buffer, unsigned int buflen);
+	unsigned int (*read )(FAR struct file *filp, FAR void * buffer, unsigned int buflen);
+  /* ioctrl */
+	int (*ioctl)(FAR struct file *filp, int cmd, unsigned long arg,void *pri_data);
+	/* storage device */
+	STORAGE_DEV * storage_dev;
+	/* end of data */
 };
-struct drv_ops_s
-{
-	int  (*config)(void *p_arg,int argc);
-	int  (*write)(int type,void *buffer,int width,unsigned int size);
-	int  (*read)(int type,void *buffer,int width,unsigned int size);
-	int  (*selectchip)(int type,char status);
-	int  (*enable)(int mode);
-	int  (*disable)(int mode);
-};
-
+/* shell init */
 struct shell_cmd
 {
 	 struct shell_cmd *i_peer;
@@ -255,7 +271,6 @@ struct inode
   unsigned short             i_crefs;       /* References to inode */
   unsigned short             i_flags;       /* Flags for inode */
   struct file_operations     ops;           /* Inode operations */
-	struct drv_ops_s           drv_ops;       /* driver interface at lower level */
 	struct shell_cmd           *shell_i;      /* shell command entrance */
 	struct size_of_all         max;           /* max of allthings */
 #ifdef CONFIG_FILE_MODE

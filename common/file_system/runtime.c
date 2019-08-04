@@ -59,7 +59,6 @@ int task_heap_init(void)
 	runtime.shell_i = shell_sched_getfiles();
 	/* driver config */
 	runtime.config = task_default_config;
-	runtime.drv_ops.config = task_config;
 	runtime.ops.ioctl = runtime_dev_ioctl;
 	/* file interface */
 	runtime.flip.f_inode = &runtime;
@@ -117,11 +116,6 @@ int task_default_config(void)
 		timer_enable(timer_base[i]);			
 	}
   /* return */
-	return FS_OK;
-}
-/* tack config */
-int task_config(void * p_arg , int argc)
-{
 	return FS_OK;
 }
 /* start system */

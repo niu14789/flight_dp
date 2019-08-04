@@ -22,23 +22,26 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "fs.h"
+#include "usart.h"
 #include "f_shell.h"
 #include "fs_config.h"
 #include "string.h"
 #include "gd32f30x.h"
-/* some nesscery macro */
-#define USART0_DR_ADDRESS      0x40013804
-/* functions declare */
-static int usart_heap_init(void);
-static int usart_default_config(void);
-static int usart_write( unsigned int usart_periph , void * data , unsigned int len );
-static int usart_init_global( uart_config_msg * msg );
 /* fs inode system register */
-FS_INODE_REGISTER("/USART/",usart,usart_heap_init,0);
+FS_INODE_REGISTER("/UART/",usart,usart_heap_init,0);
+/* static usart file dev */
+static struct file filp_u[USART_NUM];
+static unsigned short dma_pos[USART_NUM];/* dma detector position */
 /* usart code */
-const unsigned int usart_msg[5][9] = {
+const unsigned int usart_msg[USART_NUM][9] = {
 { USART0,GPIOA,GPIO_PIN_9/* tx pin */,GPIOA,GPIO_PIN_10/* rx pin */,
-  DMA0,DMA_CH3/* TX DMA */,DMA0,DMA_CH4/* RX DMA */},
+  DMA0,DMA_CH3/* TX DMA */,DMA0,DMA_CH4/* RX DMA */},/* USART0 config message */
+{ USART1,GPIOA,GPIO_PIN_2/* tx pin */,GPIOA,GPIO_PIN_3/* rx pin */,
+  DMA0,DMA_CH6/* TX DMA */,DMA0,DMA_CH5/* RX DMA */},/* USART1 config message */
+{ USART2,GPIOB,GPIO_PIN_10/* tx pin */,GPIOB,GPIO_PIN_11/* rx pin */,
+  DMA0,DMA_CH1/* TX DMA */,DMA0,DMA_CH2/* RX DMA */},/* USART1 config message */
+{ UART3,GPIOC,GPIO_PIN_10/* tx pin */,GPIOC,GPIO_PIN_11/* rx pin */,
+  DMA1,DMA_CH4/* TX DMA */,DMA1,DMA_CH2/* RX DMA */},/* USART1 config message */
 };
 /* heap init */
 static int usart_heap_init(void)
@@ -50,6 +53,11 @@ static int usart_heap_init(void)
 	/* driver config */
 	usart.config = usart_default_config;
 	/* file interface */
+	usart.ops.open  = usart_fopen;
+	usart.ops.write = usart_fwrite;
+	usart.ops.read  = usart_fread;
+	usart.ops.ioctl = usart_ioctrl;
+	/* file interface */
 	usart.flip.f_inode = &usart;
 	usart.flip.f_path = "/UART/";
 	/* heap */
@@ -59,32 +67,101 @@ static int usart_heap_init(void)
 	/* return ok */
 	return FS_OK;	
 }
-
-
-static unsigned char dma_receive_buffer[256];
-
 /* usart_default_config */
 static int usart_default_config(void)
 {
-  uart_config_msg msg;
-	
-	msg.baudrate = 115200;
-	msg.index = 0;
-	msg.rx_dma_buffer = (unsigned int)dma_receive_buffer;
-	msg.rx_dma_deepth = sizeof(dma_receive_buffer);
-	
-	usart_init_global(&msg);
 	/* return */
 	return FS_OK;
 }
+/* usart dev open and init */
+struct file * usart_fopen(FAR struct file *filp)
+{
+   int length;
+	 char index;
+	 /* get length of path */
+   length = strlen(	filp->f_path);
+	 /* is length more than 7? */
+	 if(length == 0x7)
+	 {
+		 /* get index */
+		 index = filp->f_path[6] - '0';
+		 /* check index */
+		 if( index < USART_NUM)
+		 {
+			 /* open always */
+			 filp_u[index].f_oflags = __FS_IS_INODE_OK;
+			 filp_u[index].f_inode = &usart;
+			 filp_u[index].f_multi = index;
+			 filp_u[index].f_path = "/UART/0-7";
+			 /* allow open */
+			 return &filp_u[index];//open succeed	
+		 }
+		 else
+		 {
+			 	/* can not find this device*/
+		    return NULL;//open fail
+		 }
+	 }
+	 else
+	 {
+		 /* can not supply this format */
+		 return NULL;//open fail
+	 }	
+}
+/* file interface write */
+static int usart_fwrite(FAR struct file *filp, FAR const void *buffer, unsigned int buflen)
+{
+	return usart_dma_write(filp->f_multi,buffer,buflen);
+}
+/* read data */
+unsigned int usart_fread(FAR struct file *filp, FAR void * buffer, unsigned int buflen)
+{
+	return usart_dma_read(filp->f_multi,filp->f_user0,filp->f_user1,buffer,buflen);
+}
+/* ioctrl */
+/* usart ioctrl */
+static int usart_ioctrl(FAR struct file *filp, int cmd, unsigned long arg,void *pri_data)
+{
+	/* nothing diffrent */
+	int ret = FS_OK;
+	/* select a cmd */
+	switch(cmd)
+	{
+		/* select a cmd */
+		case 0:
+			/* get the lengtch */
+			if(sizeof(uart_config_msg) != arg )
+			{
+				return FS_ERR;// not supply this format
+			}			
+			/* config usart ang uart */
+		  ret = usart_init_global(pri_data);
+      /* end of function */		
+		  break;		
+		  /* end of data */
+		case 1:
+			/* change baudrate */
+		  usart_baudrate_set(usart_msg[filp->f_multi][0],arg);
+      /* end of data */
+		  break;
+		  /* end of data */
+		default:
+			break;
+	}
+	/* return */
+	return ret;
+}
 /* static usart init global */
-static int usart_init_global( uart_config_msg * msg )
+static int usart_init_global( const uart_config_msg * msg )
 {
 	/* check param */
-	if( msg->index >= 5 )
+	if( msg->index >= USART_NUM )
 	{
 		return FS_ERR;/* bad index */
 	}
+	/* save dma buffer and length */
+	filp_u[msg->index].f_user0 = msg->rx_dma_buffer;
+	filp_u[msg->index].f_user1 = msg->rx_dma_deepth;
 	/* enable all gpio clock */
 	rcu_periph_clock_enable(RCU_GPIOA);
   rcu_periph_clock_enable(RCU_GPIOB);
@@ -121,6 +198,7 @@ static int usart_init_global( uart_config_msg * msg )
   dma_parameter_struct DmaInitParam;
   /* enable clock */
   rcu_periph_clock_enable(RCU_DMA0);
+	rcu_periph_clock_enable(RCU_DMA1);
 	/* DMA TX MODE config */
 	dma_deinit(usart_msg[msg->index][5], (dma_channel_enum)usart_msg[msg->index][6]);
 	/* init param */
@@ -129,7 +207,7 @@ static int usart_init_global( uart_config_msg * msg )
 	DmaInitParam.memory_inc = DMA_MEMORY_INCREASE_ENABLE;
 	DmaInitParam.memory_width = DMA_MEMORY_WIDTH_8BIT;
 	DmaInitParam.number = 0;
-	DmaInitParam.periph_addr = USART0_DR_ADDRESS;
+	DmaInitParam.periph_addr = usart_msg[msg->index][0] + 4;
 	DmaInitParam.periph_inc = DMA_PERIPH_INCREASE_DISABLE;
 	DmaInitParam.periph_width = DMA_PERIPHERAL_WIDTH_8BIT;
 	DmaInitParam.priority = DMA_PRIORITY_ULTRA_HIGH;
@@ -160,56 +238,53 @@ static int usart_init_global( uart_config_msg * msg )
 	/* enable usart0 dma receive mode */
 	usart_dma_receive_config(usart_msg[msg->index][0], USART_DENR_ENABLE);
 	/* enable dma */
-	dma_channel_enable(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8]);		
+	dma_channel_enable(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8]);			
 	/* ok . we've finished . now return */
 	return FS_OK;
 }
 /* int usart0 dma tx */
-static int usart_write( unsigned int usart_periph , void * data , unsigned int len )
+static int usart_dma_write( unsigned int index , const void * data , unsigned int len )
 {
 	/* disable first */
-	dma_channel_disable(DMA0, DMA_CH3);
+	dma_channel_disable(usart_msg[index][5], (dma_channel_enum)usart_msg[index][6]);
 	/* reset dma */
-	DMA_CHMADDR(DMA0,DMA_CH3) = (unsigned int)data;
-	DMA_CHCNT(DMA0,DMA_CH3)   = ( len & 0xffff );
+	DMA_CHMADDR(usart_msg[index][5], (dma_channel_enum)usart_msg[index][6]) = (unsigned int)data;
+	DMA_CHCNT(usart_msg[index][5], (dma_channel_enum)usart_msg[index][6])   = ( len & 0xffff );
 	/* enable dma again */
-	dma_channel_enable(DMA0,DMA_CH3);	
+	dma_channel_enable(usart_msg[index][5], (dma_channel_enum)usart_msg[index][6]);	
 	/* return ok as uaural */
 	return FS_OK;
 }
-#if 1
-static unsigned int dma_pos = 0;
-
-static unsigned char dma_rec_test[256];
-
-/* usart test task */
-void usart_test_task(void)
+/* static usart read vio dma */
+static unsigned int usart_dma_read(unsigned int index,unsigned int dma_buf_addr,unsigned int dma_deepth,void * rdata,unsigned int rlen)
 {
 	/* get and send */
-	unsigned int dma_cnt = sizeof(dma_receive_buffer) - dma_transfer_number_get(DMA0, DMA_CH4);
+	unsigned int dma_cnt = dma_deepth - dma_transfer_number_get(usart_msg[index][7], (dma_channel_enum)usart_msg[index][8]);
 	/* get data */
-	if( dma_cnt != dma_pos )
+	if( dma_cnt != dma_pos[index] )
 	{
 		/* ok ! we got some data */
-		unsigned short dma_counter = ( dma_cnt > dma_pos ) ? ( dma_cnt - dma_pos ) : 
-			                           ( sizeof(dma_receive_buffer) - dma_pos + dma_cnt );
+		unsigned short dma_counter = ( dma_cnt > dma_pos[index] ) ? ( dma_cnt - dma_pos[index] ) : 
+			                           ( dma_deepth - dma_pos[index] + dma_cnt );
+		/* get read transfer length */
+		dma_counter = ( rlen > dma_counter ) ? dma_counter : rlen;
 		/* copy data */
+		const unsigned char * src = ( const unsigned char *)dma_buf_addr;
+		unsigned char * dst = (unsigned char *)rdata;
+		/* real copy data */
 		for( unsigned int i = 0 ; i < dma_counter ; i ++ )
 		{
-			dma_rec_test[i] = dma_receive_buffer[(dma_pos+i) %  sizeof(dma_receive_buffer)];
+			dst[i] = src[(dma_pos[index]+i) %  dma_deepth];
 		}
-		/* send again */
-		usart_write(0,dma_rec_test,dma_counter);
 		/* reset pos */
-		dma_pos = dma_cnt;
+		dma_pos[index] = ( dma_pos[index] + dma_counter ) % dma_deepth ;
+		/* return data that had read */
+		return dma_counter;
 	}
-}
-/* reg a test task */
-FS_SHELL_STATIC(usart_test_task,usart_test_task,4,_CB_TIMER_|_CB_IT_IRQN_(TASK_PERIOD0_ID)); // 100ms
+	/* got nothing */
+	return FS_OK;
+}	
 /* end of file */
-#endif
-
-
 
 
 
