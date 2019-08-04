@@ -1269,7 +1269,7 @@ unsigned char gps_transfer(gps_data* buf)
 //		ground_gps(buf);
 //		ground_rc();
 		ret = 1;
-		#if 1
+		#if 0
 		static unsigned int led_ctrl = 0;
 		
 		if( led_ctrl++ % 2 )
