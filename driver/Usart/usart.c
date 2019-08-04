@@ -111,12 +111,12 @@ struct file * usart_fopen(FAR struct file *filp)
 /* file interface write */
 static int usart_fwrite(FAR struct file *filp, FAR const void *buffer, unsigned int buflen)
 {
-	return usart_dma_write(filp->f_multi,buffer,buflen);
+	return usart_dma_write(filp->f_multi, filp->f_user1 >> 16 ,buffer,buflen);
 }
 /* read data */
 unsigned int usart_fread(FAR struct file *filp, FAR void * buffer, unsigned int buflen)
 {
-	return usart_dma_read(filp->f_multi,filp->f_user0,filp->f_user1,buffer,buflen);
+	return usart_dma_read(filp->f_multi,filp->f_user0,filp->f_user1 & 0xffff,buffer,buflen);
 }
 /* ioctrl */
 /* usart ioctrl */
@@ -161,7 +161,9 @@ static int usart_init_global( const uart_config_msg * msg )
 	}
 	/* save dma buffer and length */
 	filp_u[msg->index].f_user0 = msg->rx_dma_buffer;
-	filp_u[msg->index].f_user1 = msg->rx_dma_deepth;
+	filp_u[msg->index].f_user1 = msg->rx_dma_deepth & 0xffff;
+	/* save dma mode or normal mode */
+	filp_u[msg->index].f_user1 |= ( msg->tx_mode << 24 ) | ( msg->rx_mode << 16 );
 	/* enable all gpio clock */
 	rcu_periph_clock_enable(RCU_GPIOA);
   rcu_periph_clock_enable(RCU_GPIOB);
@@ -199,7 +201,7 @@ static int usart_init_global( const uart_config_msg * msg )
   /* enable clock */
   rcu_periph_clock_enable(RCU_DMA0);
 	rcu_periph_clock_enable(RCU_DMA1);
-	/* DMA TX MODE config */
+	/* DMA TX MODE config . param default */
 	dma_deinit(usart_msg[msg->index][5], (dma_channel_enum)usart_msg[msg->index][6]);
 	/* init param */
 	DmaInitParam.direction = DMA_MEMORY_TO_PERIPHERAL;
@@ -210,48 +212,73 @@ static int usart_init_global( const uart_config_msg * msg )
 	DmaInitParam.periph_addr = usart_msg[msg->index][0] + 4;
 	DmaInitParam.periph_inc = DMA_PERIPH_INCREASE_DISABLE;
 	DmaInitParam.periph_width = DMA_PERIPHERAL_WIDTH_8BIT;
-	DmaInitParam.priority = DMA_PRIORITY_ULTRA_HIGH;
-	/* init */
-	dma_init(usart_msg[msg->index][5], (dma_channel_enum)usart_msg[msg->index][6], &DmaInitParam);
-	/* configure DMA mode */
-	dma_circulation_disable(usart_msg[msg->index][5], (dma_channel_enum)usart_msg[msg->index][6]);
-	dma_memory_to_memory_disable(usart_msg[msg->index][5], (dma_channel_enum)usart_msg[msg->index][6]);
-	/* USART DMA enable for transmission */
-	usart_dma_transmit_config(usart_msg[msg->index][0], USART_DENT_ENABLE);
-	/* enable DMA channel1 */
-	dma_channel_disable(usart_msg[msg->index][5], (dma_channel_enum)usart_msg[msg->index][6]);
-
-	/* DMA RX MODE CONFIG */
-	dma_deinit(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8]);
-	/* set param */
-	DmaInitParam.direction = DMA_PERIPHERAL_TO_MEMORY;
-	/* set receive buffer */
-	DmaInitParam.memory_addr = msg->rx_dma_buffer;
-	DmaInitParam.number = msg->rx_dma_deepth;
-	/* others */
-	DmaInitParam.priority = DMA_PRIORITY_ULTRA_HIGH;
-	/* init */	
-	dma_init(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8], &DmaInitParam);
-	/* configure DMA mode */	
-	dma_circulation_enable(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8]);
-	dma_memory_to_memory_disable(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8]);
-	/* enable usart0 dma receive mode */
-	usart_dma_receive_config(usart_msg[msg->index][0], USART_DENR_ENABLE);
-	/* enable dma */
-	dma_channel_enable(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8]);			
+	DmaInitParam.priority = DMA_PRIORITY_ULTRA_HIGH;	
+	/* dma mode or not */
+	if( msg->tx_mode == _UART_TX_DMA )
+	{
+		/* init */
+		dma_init(usart_msg[msg->index][5], (dma_channel_enum)usart_msg[msg->index][6], &DmaInitParam);
+		/* configure DMA mode */
+		dma_circulation_disable(usart_msg[msg->index][5], (dma_channel_enum)usart_msg[msg->index][6]);
+		dma_memory_to_memory_disable(usart_msg[msg->index][5], (dma_channel_enum)usart_msg[msg->index][6]);
+		/* USART DMA enable for transmission */
+		usart_dma_transmit_config(usart_msg[msg->index][0], USART_DENT_ENABLE);
+		/* enable DMA channel1 */
+		dma_channel_disable(usart_msg[msg->index][5], (dma_channel_enum)usart_msg[msg->index][6]);
+  }
+	/* dma mode or not */
+	if( msg->rx_mode == _UART_RX_DMA )	
+	{
+		/* DMA RX MODE CONFIG */
+		dma_deinit(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8]);
+		/* set param */
+		DmaInitParam.direction = DMA_PERIPHERAL_TO_MEMORY;
+		/* set receive buffer */
+		DmaInitParam.memory_addr = msg->rx_dma_buffer;
+		DmaInitParam.number = msg->rx_dma_deepth;
+		/* others */
+		DmaInitParam.priority = DMA_PRIORITY_ULTRA_HIGH;
+		/* init */	
+		dma_init(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8], &DmaInitParam);
+		/* configure DMA mode */	
+		dma_circulation_enable(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8]);
+		dma_memory_to_memory_disable(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8]);
+		/* enable usart0 dma receive mode */
+		usart_dma_receive_config(usart_msg[msg->index][0], USART_DENR_ENABLE);
+		/* enable dma */
+		dma_channel_enable(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8]);		
+	}		
 	/* ok . we've finished . now return */
 	return FS_OK;
 }
 /* int usart0 dma tx */
-static int usart_dma_write( unsigned int index , const void * data , unsigned int len )
+static int usart_dma_write( unsigned int index , unsigned short txrx_m,const void * data , unsigned int len )
 {
-	/* disable first */
-	dma_channel_disable(usart_msg[index][5], (dma_channel_enum)usart_msg[index][6]);
-	/* reset dma */
-	DMA_CHMADDR(usart_msg[index][5], (dma_channel_enum)usart_msg[index][6]) = (unsigned int)data;
-	DMA_CHCNT(usart_msg[index][5], (dma_channel_enum)usart_msg[index][6])   = ( len & 0xffff );
-	/* enable dma again */
-	dma_channel_enable(usart_msg[index][5], (dma_channel_enum)usart_msg[index][6]);	
+	/* get tx and rx mode */
+	if( txrx_m >> 8 == _UART_TX_DMA )
+	{
+		/* disable first */
+		dma_channel_disable(usart_msg[index][5], (dma_channel_enum)usart_msg[index][6]);
+		/* reset dma */
+		DMA_CHMADDR(usart_msg[index][5], (dma_channel_enum)usart_msg[index][6]) = (unsigned int)data;
+		DMA_CHCNT(usart_msg[index][5], (dma_channel_enum)usart_msg[index][6])   = ( len & 0xffff );
+		/* enable dma again */
+		dma_channel_enable(usart_msg[index][5], (dma_channel_enum)usart_msg[index][6]);
+	}		
+	else
+	{
+		/* transfer data to pdata */
+		unsigned char * pdata = (unsigned char *)data;
+		/* write to usart one by one */
+		for( int i = 0 ; i < len ; i ++ )
+		{
+			/* first wait until the usart is idle */
+			while( RESET == usart_flag_get( usart_msg[index][0] , USART_FLAG_TC ) )
+			{ /* nothing need to do */ }
+      /* send data */
+		  usart_data_transmit(usart_msg[index][0],pdata[i]);
+		}
+	}
 	/* return ok as uaural */
 	return FS_OK;
 }

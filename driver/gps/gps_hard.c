@@ -199,17 +199,7 @@ void gps_set_baudrate(unsigned int baudrate, unsigned int dma_deepth)
 /* gps send data */
 void gps_uart_send(unsigned char *buffer, unsigned char size)
 {
-//	gps_delay_ms(50);
-//	fs_write(usart0_p,buffer,size);
-	for( int i = 0 ; i < size ; i ++ )
-	{
-		 while(RESET == usart_flag_get(USART0,USART_FLAG_TC))
-		 {
-			 
-		 }
-		
-	   usart_data_transmit(USART0,buffer[i]);
-	}
+	fs_write(usart0_p,buffer,size);
 }
 
 /*******************************************************************************

@@ -1,63 +1,29 @@
-/*
-*****************************************************************************
-* Filename:			
-* Description:		
-* Change History:
-*			xxxx	- 20xx-xx-xx - Ver 0.1
-*					- created
-*			xxxx		- 20xx-xx-xx - Ver
-*					- change code
-******************************************************************************
-*/
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : notify.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by ST under BSD 3-Clause license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/BSD-3-Clause
+  *
+  ******************************************************************************
+	* BEEP TIM3 CHANNEL1 PWM Gerente
+	* LED is TIM4 CH3 and CH4
+  */
+/* USER CODE END Header */
+
+/* Includes ------------------------------------------------------------------*/
 
 #ifndef	__GPS_H__
 #define	__GPS_H__
-//============================================================================
-typedef struct gps_nav_struct_s{
-	unsigned long long system_timestamps;//size 8
-	unsigned int system_pps_num;//size 4
-	/* from ID 0x01 */
-	unsigned int GPS_time_ms;//size 4
-	unsigned short GPS_week_num;//size 2
-	unsigned char svn;//size 1
-	unsigned char position_flag1;//size 1
-	unsigned char position_flag2;//size 1
-	unsigned char init_num;//size 1
-	unsigned short rev1;//size 2
-	/* from ID 0x02 */
-	double lat;//size 8
-	double lon;//size 8
-	double height;//size 8
-	/* from ID 0x08 */
-	unsigned char rev_a[7];//size 2
-	unsigned char Velocity_flags;//size 1
-	float Speed;//size 4
-	float Heading;//size 4
-	float Vertical_velocity;//size 4
-	float Local_heading;//size 4
-	/* from ID 0x09 */
-	float PDOP;//size 4Heading
-	float HDOP;//size 4
-	float VDOP;//size 4
-	float TDOP;//size 4
-	unsigned char rev_b[6];//size 8
-	unsigned char RTK_flags;
-	unsigned char RTK_condition;
-}gps_nav_def;
-
-
-//============================================================================
-void gps_dat_decode(unsigned char d);
-
-//========================================================================================================================
-
-
-/*
- * gps.h
- *
- *  Created on: 2016?7?27?
- *      Author: YJ-User17
- */
 
 /* Define --------------------------------------------------------------------*/
 
@@ -285,6 +251,7 @@ typedef struct {
 	int		headVeh;	/**< (ubx8+ only) Heading of vehicle (2-D) [1e-5 deg] */
 	unsigned int	reserved4;	/**< (ubx8+ only) */
 } ubx_payload_rx_nav_pvt_t;
+
 #define UBX_PAYLOAD_RX_NAV_PVT_SIZE_UBX8	(sizeof(ubx_payload_rx_nav_pvt_t))
 
 /* Rx NAV-TIMEUTC */
@@ -754,117 +721,6 @@ int gps_rtk_status(void);
 unsigned char ublox_status(void);
 void gps_uart_send(unsigned char *buffer, unsigned char size);
 //------------------------------End of File-------------------------------------
-__packed typedef struct
-{
-	unsigned char header1;
-	unsigned char header2;
-	unsigned char header3;
-	unsigned char headerLen;
-	unsigned short msgid;
-	unsigned char msgType;
-	unsigned char portAddr;
-	unsigned short msgLen;
-	unsigned short sequence;
-	unsigned char idleTime;
-	unsigned char timeStatus;
-	unsigned short week;
-	unsigned int ms;
-	unsigned int receiverStatus;
-	unsigned short reserved;
-	unsigned short receiverSWVersion;
-}OEM718D_HEADER_PACK;//28byte
-
-__packed typedef struct
-{
-	unsigned int sol_stat;
-	unsigned int pos_type;
-	double lat;
-	double lon;
-	double hgt;
-	float undulation;
-	unsigned int datum_id;
-	float lat_deviation;
-	float lon_deviation;
-	float hgt_deviation;
-	char stn_id[4];
-	float diff_age;
-	float sol_age;
-	unsigned char SVs;
-	unsigned char solnSVs;
-	unsigned char solnL1SVs;
-	unsigned char solnMultiSVs;
-	unsigned char reserved;
-	unsigned char ext_sol_state;
-	unsigned char GalileoBeidouSigmask;
-	unsigned char GPSGlonassSigmask;
-	unsigned int crc;
-}OEM718D_BESTPOS_PACK;//76byte+28byte
-
-__packed typedef struct
-{
-	unsigned int solStatus;
-	unsigned int velType;
-	float latency;
-	float age;
-	double horizonSpeed;
-	double movingDirection;//trk gnd
-	double verticalSpeed;
-	float reserved;
-	unsigned int crc;
-}OEM718D_BESTVEL_PACK;//48byte+28byte
-
-__packed typedef struct
-{
-	unsigned int solStat;
-	unsigned int posType;
-	float baselineLength;
-	float heading;
-	float pitch;
-	float reserved;
-	float headingDeviation;
-	float pitchDeviation;
-	char roverStnID[4];
-	char masterStnID[4];
-	unsigned char SVs;
-	unsigned char solnSVs;
-	unsigned char obs;
-	unsigned char multi;
-	unsigned char solSource;
-	unsigned char extSolStat;
-	unsigned char GalileoBeidouSigmask;
-	unsigned char GPSGlonassSigmask;
-	unsigned int crc;
-}OEM718D_HEADING2_PACK;//52byte+28byte
-#define MAX_NUM_PRN 0x40
-__packed typedef struct
-{
-	float GDOP;
-	float PDOP;
-	float HDOP;
-	float HTDOP;
-	float TDOP;
-	float cutoff;
-	unsigned int numOfPRN;
-	unsigned int PRN[MAX_NUM_PRN];
-}OEM718D_PSRDOP_PACK;//36byte+28byte+numofPRN*4 
-
-/* defile */
-typedef union 
-{
-	OEM718D_BESTPOS_PACK decode_buffer_bestpos;
-	OEM718D_BESTVEL_PACK decode_buffer_bestvel;
-	OEM718D_HEADING2_PACK decode_buffer_heading2;
-	OEM718D_PSRDOP_PACK decode_buffer_psrdop;
-}PAYLOAD_DECODE_BUFFER_T;
-
-typedef enum 
-{
-	POS_TYPE_NONE,//0 -> no solution
-	POS_TYPE_SINGLE,//1 -> single point position
-	POS_TYPE_PSRDIFF,//2 -> Pseudorange differential solution
-	POS_TYPE_FIXED=4,//4 -> RTK fixed ambiguities solution
-	POS_TYPE_FLOATE//5 -> RTK floate ambiguities solution
-}OEM718D_POS_TYPE;
 
 //define pi
 #define PI 3.14159265358979323846f
