@@ -221,7 +221,7 @@ static void icm206_read_sensor( ICM206_INS_DEF * ins )
 	/* read */
 	spi0_multiple_read(buffer,sizeof(buffer));
 	/* get */
-  gpio_bit_reset(GPIOA, GPIO_PIN_4);
+  gpio_bit_set(GPIOA, GPIO_PIN_4);
   /* change */
   ins->accel[1] = (short)((buffer[0] << 8 ) + buffer[1]) * ACCEL_SENSITIVITY;	
 	ins->accel[0] = (short)((buffer[2] << 8 ) + buffer[3]) * ACCEL_SENSITIVITY;
