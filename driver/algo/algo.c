@@ -24,7 +24,6 @@
 #include "fs.h"
 #include "f_shell.h"
 #include "gd32f30x.h"
-#include "runtime.h"
 #include "string.h"
 #include "fs_config.h"
 #include "f_ops.h"

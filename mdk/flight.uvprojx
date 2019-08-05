@@ -7,7 +7,7 @@
 
   <Targets>
     <Target>
-      <TargetName>BotanFcs</TargetName>
+      <TargetName>flight</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
       <pCCUsed>5060750::V5.06 update 6 (build 750)::ARMCC</pCCUsed>
@@ -49,7 +49,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\output\</OutputDirectory>
-          <OutputName>Project</OutputName>
+          <OutputName>flight</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\Lib\CMSIS\GD\GD32F30x\Include;..\Lib\CMSIS;..\Lib\GD32F30x_standard_peripheral\Include;..\Utilities;..\;C:\Keil_v5\ARM\Pack\ARM\CMSIS\4.2.0\CMSIS\Include;..\sensor\Dps310;..\sensor\Gps;..\sensor\ICM20600;..\sensor\Calibration;..\sensor\ST480;..\driver\SPI;..\driver\InternalFlash;..\driver\Parameter;..\driver\Usart;..\user\TEST;..\link;..\driver\PWM;..\driver\led;..\driver\adc;..\driver\sbus;..\Lib\GD32F30x_usbd_driver\Include;..\driver\CdcAcm;..\driver\I2C;..\common\file_system;..\driver\icm;..\driver\common;..\driver\irom</IncludePath>
+              <IncludePath>..\Lib\CMSIS\GD\GD32F30x\Include;..\Lib\CMSIS;..\Lib\GD32F30x_standard_peripheral\Include;..\Utilities;..\;C:\Keil_v5\ARM\Pack\ARM\CMSIS\4.2.0\CMSIS\Include;..\sensor\Dps310;..\sensor\Gps;..\sensor\ICM20600;..\sensor\Calibration;..\sensor\ST480;..\driver\SPI;..\driver\InternalFlash;..\driver\Parameter;..\driver\Usart;..\user\TEST;..\link;..\driver\PWM;..\driver\led;..\driver\adc;..\driver\sbus;..\Lib\GD32F30x_usbd_driver\Include;..\driver\CdcAcm;..\driver\I2C;..\common\file_system;..\driver\icm;..\driver\common;..\driver\irom;..\user</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -388,11 +388,6 @@
               <FilePath>..\Lib\CMSIS\GD\GD32F30x\Source\ARM\startup_gd32f30x_xd.s</FilePath>
             </File>
             <File>
-              <FileName>gd32f30x_it.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\gd32f30x_it.c</FilePath>
-            </File>
-            <File>
               <FileName>system_gd32f30x.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Lib\CMSIS\GD\GD32F30x\Source\system_gd32f30x.c</FilePath>
@@ -400,7 +395,12 @@
             <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\main.c</FilePath>
+              <FilePath>..\user\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>gd32f30x_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user\gd32f30x_it.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -627,7 +627,7 @@
       <component Cclass="CMSIS" Cgroup="CORE" Cvendor="ARM" Cversion="5.1.2" condition="ARMv6_7_8-M Device">
         <package name="CMSIS" schemaVersion="1.3" url="http://www.keil.com/pack/" vendor="ARM" version="5.4.0"/>
         <targetInfos>
-          <targetInfo name="BotanFcs"/>
+          <targetInfo name="flight"/>
         </targetInfos>
       </component>
     </components>
