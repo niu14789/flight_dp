@@ -22,23 +22,21 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#ifndef __COMMON_H__
-#define __COMMON_H__
+#ifndef __ALGO_H__
+#define __ALGO_H__
+/* some data */
+static int algo_heap_init(void);
+static int algo_default_config(void);
+static void algo_task_1ms(void);
+static void algo_task_4ms(void);
+static void algo_task_10ms(void);
+static void algo_task_20ms(void);
+static void algo_task_100ms(void);
+static void algo_task_idle(void);
+static void algo_task_500ms(void);
 
-#include "state.h"
-
-/* declares */
-static int common_default_config(void);
-static int common_heap_init(void);
-static void system_run_thread(void);
-/* all above functions are for export */
-extern unsigned long long read_sys_time_us(void);
-int user_read_gps(GPS_User_t * state);
-int user_read_imu(ICM206_INS_DEF * icm);
-int user_set_pwm(unsigned short * pwm_t,unsigned short len);
-int user_set_led(unsigned short mode );
-int user_update_log( const void * edata ,unsigned short len );
-/* end of files */
 #endif
 
 
+
+/* end of file */

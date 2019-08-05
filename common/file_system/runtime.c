@@ -77,8 +77,8 @@ int task_heap_init(void)
 int task_default_config(void)
 {
 	/* psr and period */
-	unsigned short psr[5] = {59,59,59,1199,1199};
-	unsigned short ped[5] = {1999,7999,19999,9999,49999};	
+	unsigned short psr[5] = {119,119,119,119,1199};/* 1ms 4ms 10ms 20ms 100ms */
+	unsigned short ped[5] = {999,3999,9999,19999,9999};	
 	unsigned int  timer_base[5] = { TIMER2 , TIMER3 , TIMER4 ,TIMER5 ,TIMER6 };
 	/* timer init */
 	timer_parameter_struct timer_initpara;

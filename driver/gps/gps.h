@@ -669,6 +669,7 @@ typedef	struct
 	/* SV is used for navigation */
 	unsigned char used[SAT_INFO_MAX_SATELLITES];
 }gps_sv_info_def;
+
 typedef struct 
 {
 	unsigned short agcCnt;
@@ -682,6 +683,7 @@ typedef struct
 	*/
 	unsigned char flags;
 }gps_hw_status_def;
+
 typedef struct 
 {
 	gps_hw_status_def hw_status;
@@ -695,58 +697,25 @@ typedef struct
 	unsigned char flag;
 }gps_signal_quality_def;
 
-extern gps_signal_quality_def gps_signal_quality;
-#define	BD930_SV_MAX_NUMBER 	32;
-
 int gps_receive(void);
 void gps_uart_init(void);
 int gps_configure(void);
-//void gps_task(void);
-void exit_timeplus(void);
-unsigned char gps_transfer(gps_data* buf);
-void gps_timeplus_config(void);
-void gps_utc(unsigned char* buf);
 unsigned short gpio_input(unsigned char gpio,unsigned short pin);
 extern int gps_parse_char(const unsigned char b);
-extern unsigned char gps_transfer(gps_data* buf);
-extern gps_data gps_buf111;
-extern volatile unsigned int gps_pps_time; 
-extern volatile unsigned char pps_flags;
-extern unsigned int gps_time_ms_s;
-extern unsigned char ppsnum ;
-static void big2little(unsigned char * src,char * dst,unsigned char len);
-int gsof_transfer(unsigned char * buffer , unsigned int len);
-static int gps_raw_detail(unsigned char type,unsigned char *data,unsigned int len );
-int gps_rtk_status(void);
+unsigned char gps_transfer(gps_data* buf);
 unsigned char ublox_status(void);
 void gps_uart_send(unsigned char *buffer, unsigned char size);
 //------------------------------End of File-------------------------------------
+/* functions declare */
+static int gps_heap_init(void);
+static int gps_default_config(void);
+static void gps_init_thread(void);
+static void gps_task_thread( void );
+/*----------------*/
 
-//define pi
-#define PI 3.14159265358979323846f
-#define RTK_FLAG_FIX	0x02
- 
-int oem718d_nav_decode(unsigned char * buffer , unsigned int len);
-void send_gps_nav(void);
-unsigned char board_type_report(void);
-static void chang_name_nav(void);
-void set_board_type(unsigned char type);
-
-#define BESTPOS_ID 42
-#define BESTVEL_ID 99
-#define HEADING2_ID 1335
-#define PSRDOP_ID 174
-
-/* define bestpos.pos_type */
-#define POS_SOLUTION_NONE							0
-#define POS_SOLUTION_SINGLE						16
-#define POS_SOLUTION_PSRDIFF					17
-#define POS_SOLUTION_L1_INT						48
-#define POS_SOLUTION_WIDE_INT					49
-#define POS_SOLUTION_NARROW_INT				50
-#define POS_SOLUTION_L1_FLOATE				32
-#define POS_SOLUTION_NARROW_FLOATE		34
 
 #endif
+
+/* end of file */
 
 

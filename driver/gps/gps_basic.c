@@ -27,19 +27,21 @@
 #include "f_ops.h"
 #include "string.h"
 #include "gps.h"
-/* functions declare */
-static int gps_heap_init(void);
-static int gps_default_config(void);
-static void gps_init_thread(void);
-static void gps_task_thread( void );
+#include "state.h"
+/* file & driver 's interface */
+static struct file * gps_fopen (FAR struct file *filp);
+/* file interface to read gps data */
+static unsigned int gps_fread(FAR struct file *filp, FAR void * buffer, unsigned int buflen);
 /* fs inode system register */
-FS_INODE_REGISTER("/GPS/",gps,gps_heap_init,0);
+FS_INODE_REGISTER("gps.o",gps,gps_heap_init,0);
 /* some test define */
 struct file * usart0_p,* usart1_p,* usart2_p,* usart3_p;
 /* gps define */
 static unsigned char gps_dma_d0[256];
 /* gps_date_flox*/
 gps_data ublox_gps;
+/* export this */
+FS_SHELL_STATIC(ublox_gps,ublox_gps,sizeof(ublox_gps),_CB_RT_);
 /* heap init */
 static int gps_heap_init(void)
 {
@@ -51,7 +53,10 @@ static int gps_heap_init(void)
 	gps.config = gps_default_config;
 	/* file interface */
 	gps.flip.f_inode = &gps;
-	gps.flip.f_path = "/gps.o";
+	gps.flip.f_path = "gps.o";
+	/* file interface */
+	gps.ops.open = gps_fopen;
+	gps.ops.read = gps_fread;
 	/* heap */
 	
 	/* add your own code here */
@@ -134,9 +139,59 @@ static void gps_task_thread( void )
 		}
 	}
 }
-
-
-
+/* file & driver 's interface */
+static struct file * gps_fopen (FAR struct file *filp)
+{
+	return &gps.flip;
+}
+/* file interface to read gps data */
+static unsigned int gps_fread(FAR struct file *filp, FAR void * buffer, unsigned int buflen)
+{
+	/* ignore the complier warring */
+	(void)filp;
+	/* read */
+	if( buflen != sizeof(GPS_User_t) || buffer == NULL )
+	{
+		/* can not supply this format */
+		return FS_OK;
+	}	
+	/* transfer to gps data formate */
+	GPS_User_t * gps_user = ( GPS_User_t * )buffer;
+	/* get data and buffer . valibable ? */
+  if( ublox_gps.reserved1 )
+	{
+		/*
+		   GNSSfix type: 0 = No fix, 1 = Dead Reckoning only, 
+		   2 = 2D fix, 3 = 3d-fix, 4 = GNSS + dead reckoning, 5 = time only fix
+		*/
+		gps_user->fixType = ublox_gps.fixType;
+		/**&lt; Position DOP [0.01] */
+		gps_user->pDOP = ublox_gps.pDOP;
+		/**&lt; Number of SVs used in Nav Solution */
+		gps_user->numSV = ublox_gps.numSV;
+		/**&lt; Longitude [deg] */
+		gps_user->lon = ublox_gps.lon;
+		/**&lt; Latitude [deg] */
+		gps_user->lat = ublox_gps.lat;
+		/**&lt; Height above mean sea level [m] */
+		gps_user->height = ublox_gps.height;
+		/**&lt; NED north velocity [m/s]*/
+		gps_user->velN = ublox_gps.velN;
+		/**&lt; NED east velocity [m/s]*/
+		gps_user->velE = ublox_gps.velE;
+		/**&lt; NED up velocity [m/s]*/
+		gps_user->velU = -ublox_gps.velD;
+		/* GPS time */
+		gps_user->position_timestamp = ublox_gps.iTOW;
+		/* disale gps data */
+		ublox_gps.reserved1 = 0;
+		/* look good ! return the leng we've read */
+		return buflen;
+	}
+	/* oh no ! we got nothing */
+	return FS_OK;
+  /* end of data */	
+}
 
 
 

@@ -29,8 +29,10 @@
 static int led_heap_init(void);
 static int led_default_config(void);
 static void led_thread(void);
+static struct file * led_fopen (FAR struct file *filp);
+static int led_ioctrl(FAR struct file *filp, int cmd, unsigned long arg,void *pri_data);
 /* fs inode system register */
-FS_INODE_REGISTER("/led.o",led,led_heap_init,0);
+FS_INODE_REGISTER("led.o",led,led_heap_init,0);
 /* as default , define a led task in 100ms */
 FS_SHELL_STATIC(led_thread,led_thread,4,_CB_TIMER_|_CB_IT_IRQN_(TASK_PERIOD3_ID));
 /* led hardware default */
@@ -52,7 +54,10 @@ static int led_heap_init(void)
 	led.config = led_default_config;
 	/* file interface */
 	led.flip.f_inode = &led;
-	led.flip.f_path = "/led.o";
+	led.flip.f_path = "led.o";
+	/* file interface */
+	led.ops.open  = led_fopen;
+	led.ops.ioctl = led_ioctrl;
 	/* heap */
 	
 	/* add your own code here */
@@ -74,6 +79,34 @@ static int led_default_config(void)
 	}
 	/* return a ok */
 	return FS_OK;
+}
+/* file interface */
+/* file & driver 's interface */
+static struct file * led_fopen (FAR struct file *filp)
+{
+	return &led.flip;
+}
+/* ioctrl for control led mode */
+static int led_ioctrl(FAR struct file *filp, int cmd, unsigned long arg,void *pri_data)
+{
+/* nothing diffrent */
+	int ret = FS_OK;
+	/* select a cmd */
+	switch(cmd)
+	{
+		case 0:
+		  /* write */
+		  
+		  /* end of cmd */
+			break;	
+		case 1:
+			/* set led mode */
+		  break;
+		default:
+			break;
+	}
+	/* return */
+	return ret;
 }
 /* for a task test */
 static void led_thread(void)

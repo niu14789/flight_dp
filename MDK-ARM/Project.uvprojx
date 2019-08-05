@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\Lib\CMSIS\GD\GD32F30x\Include;..\Lib\CMSIS;..\Lib\GD32F30x_standard_peripheral\Include;..\Utilities;..\;C:\Keil_v5\ARM\Pack\ARM\CMSIS\4.2.0\CMSIS\Include;..\sensor\Dps310;..\sensor\Gps;..\sensor\ICM20600;..\sensor\Calibration;..\sensor\ST480;..\driver\SPI;..\driver\InternalFlash;..\driver\Parameter;..\driver\Usart;..\user\TEST;..\link;..\driver\PWM;..\driver\led;..\driver\adc;..\driver\sbus;..\Lib\GD32F30x_usbd_driver\Include;..\driver\CdcAcm;..\driver\I2C;..\common\file_system;..\driver\icm</IncludePath>
+              <IncludePath>..\Lib\CMSIS\GD\GD32F30x\Include;..\Lib\CMSIS;..\Lib\GD32F30x_standard_peripheral\Include;..\Utilities;..\;C:\Keil_v5\ARM\Pack\ARM\CMSIS\4.2.0\CMSIS\Include;..\sensor\Dps310;..\sensor\Gps;..\sensor\ICM20600;..\sensor\Calibration;..\sensor\ST480;..\driver\SPI;..\driver\InternalFlash;..\driver\Parameter;..\driver\Usart;..\user\TEST;..\link;..\driver\PWM;..\driver\led;..\driver\adc;..\driver\sbus;..\Lib\GD32F30x_usbd_driver\Include;..\driver\CdcAcm;..\driver\I2C;..\common\file_system;..\driver\icm;..\driver\common</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -383,9 +383,19 @@
           <GroupName>basic</GroupName>
           <Files>
             <File>
+              <FileName>startup_gd32f30x_xd.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\Lib\CMSIS\GD\GD32F30x\Source\ARM\startup_gd32f30x_xd.s</FilePath>
+            </File>
+            <File>
               <FileName>gd32f30x_it.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\gd32f30x_it.c</FilePath>
+            </File>
+            <File>
+              <FileName>system_gd32f30x.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Lib\CMSIS\GD\GD32F30x\Source\system_gd32f30x.c</FilePath>
             </File>
             <File>
               <FileName>main.c</FileName>
@@ -395,17 +405,7 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>CMSIS</GroupName>
-          <Files>
-            <File>
-              <FileName>system_gd32f30x.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Lib\CMSIS\GD\GD32F30x\Source\system_gd32f30x.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>GD32F30x_Peripherals</GroupName>
+          <GroupName>gd32lib</GroupName>
           <Files>
             <File>
               <FileName>gd32f30x_bkp.c</FileName>
@@ -530,16 +530,6 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>Startup</GroupName>
-          <Files>
-            <File>
-              <FileName>startup_gd32f30x_xd.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\Lib\CMSIS\GD\GD32F30x\Source\ARM\startup_gd32f30x_xd.s</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
           <GroupName>fs</GroupName>
           <Files>
             <File>
@@ -616,6 +606,21 @@
               <FileName>common.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\driver\common\common.c</FilePath>
+            </File>
+            <File>
+              <FileName>log.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\log\log.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>algo</GroupName>
+          <Files>
+            <File>
+              <FileName>algo.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\algo\algo.c</FilePath>
             </File>
           </Files>
         </Group>
