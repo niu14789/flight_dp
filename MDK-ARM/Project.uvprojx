@@ -82,7 +82,7 @@
           <AfterMake>
             <RunUserProg1>1</RunUserProg1>
             <RunUserProg2>0</RunUserProg2>
-            <UserProg1Name>fromelf --bin ".\output\@L.axf" --output ".\bin\@L.bin"</UserProg1Name>
+            <UserProg1Name>drone_output.bat</UserProg1Name>
             <UserProg2Name></UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
             <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
@@ -134,7 +134,7 @@
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
-            <DriverSelection>4099</DriverSelection>
+            <DriverSelection>4096</DriverSelection>
           </Flash1>
           <bUseTDR>1</bUseTDR>
           <Flash2>BIN\UL2CM3.DLL</Flash2>
@@ -299,8 +299,8 @@
               </OCR_RVCT8>
               <OCR_RVCT9>
                 <Type>0</Type>
-                <StartAddress>0x20000000</StartAddress>
-                <Size>0xc000</Size>
+                <StartAddress>0x20002000</StartAddress>
+                <Size>0xb000</Size>
               </OCR_RVCT9>
               <OCR_RVCT10>
                 <Type>0</Type>
@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\Lib\CMSIS\GD\GD32F30x\Include;..\Lib\CMSIS;..\Lib\GD32F30x_standard_peripheral\Include;..\Utilities;..\;C:\Keil_v5\ARM\Pack\ARM\CMSIS\4.2.0\CMSIS\Include;..\sensor\Dps310;..\sensor\Gps;..\sensor\ICM20600;..\sensor\Calibration;..\sensor\ST480;..\driver\SPI;..\driver\InternalFlash;..\driver\Parameter;..\driver\Usart;..\user\TEST;..\link;..\driver\PWM;..\driver\led;..\driver\adc;..\driver\sbus;..\Lib\GD32F30x_usbd_driver\Include;..\driver\CdcAcm;..\driver\I2C;..\common\file_system;..\driver\icm;..\driver\common</IncludePath>
+              <IncludePath>..\Lib\CMSIS\GD\GD32F30x\Include;..\Lib\CMSIS;..\Lib\GD32F30x_standard_peripheral\Include;..\Utilities;..\;C:\Keil_v5\ARM\Pack\ARM\CMSIS\4.2.0\CMSIS\Include;..\sensor\Dps310;..\sensor\Gps;..\sensor\ICM20600;..\sensor\Calibration;..\sensor\ST480;..\driver\SPI;..\driver\InternalFlash;..\driver\Parameter;..\driver\Usart;..\user\TEST;..\link;..\driver\PWM;..\driver\led;..\driver\adc;..\driver\sbus;..\Lib\GD32F30x_usbd_driver\Include;..\driver\CdcAcm;..\driver\I2C;..\common\file_system;..\driver\icm;..\driver\common;..\driver\irom</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -557,21 +557,16 @@
               <FileType>1</FileType>
               <FilePath>..\common\file_system\fs_allocate.c</FilePath>
             </File>
-            <File>
-              <FileName>fs_runs.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\common\file_system\fs_runs.c</FilePath>
-            </File>
-            <File>
-              <FileName>runtime.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\common\file_system\runtime.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>driver</GroupName>
           <Files>
+            <File>
+              <FileName>usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\Usart\usart.c</FilePath>
+            </File>
             <File>
               <FileName>icm206.c</FileName>
               <FileType>1</FileType>
@@ -581,11 +576,6 @@
               <FileName>led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\driver\led\led.c</FilePath>
-            </File>
-            <File>
-              <FileName>usart.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\driver\Usart\usart.c</FilePath>
             </File>
           </Files>
         </Group>

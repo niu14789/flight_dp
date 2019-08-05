@@ -28,7 +28,7 @@
 static struct shell_cmd dynamic_shell[20];
 static unsigned char position = 0;
 /* static backup back */
-static struct shell_cmd * p_timer_link_base_backup[7] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+static struct shell_cmd * p_timer_link_base_backup[6] = {NULL,NULL,NULL,NULL,NULL,NULL};
 static unsigned char task_mark_sermphone = 0;
 static struct shell_cmd *b_base = NULL; 
 static struct shell_cmd * p_idle;
@@ -83,7 +83,7 @@ struct shell_cmd * dynamic_find(const char * shell_cmd , unsigned char * index)
 	void * pt = 0;
 	/* we found */
 	/* get shell start */
-	for( int i = 0 ; i < 7 ; i ++ )
+	for( int i = 0 ; i < 6 ; i ++ )
 	{ 
 		pt = base_found(i);
     /*-------------*/
@@ -381,7 +381,7 @@ int shell_disable_dynamic(unsigned char index)
 	/* get base */
 	base = ( struct shell_cmd ** )base_found(0);
 	/* ------------------ */
-	for( int i = 0 ; i < 7 ; i ++ )
+	for( int i = 0 ; i < 6 ; i ++ )
 	{
 		 if( index & ( 1 << i ) )
 		 {
@@ -405,7 +405,7 @@ int shell_enable_dynamic(unsigned char index)
 	/* get base */
 	base = ( struct shell_cmd ** )base_found(0);
 	/* for each others */
-	for( int i = 0 ; i < 7 ; i ++ )
+	for( int i = 0 ; i < 6 ; i ++ )
 	{
 		 if( index & ( 1 << i ) )
 		 {

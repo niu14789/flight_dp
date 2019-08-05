@@ -32,6 +32,10 @@ FS_INODE_REGISTER("/UART/",usart,usart_heap_init,0);
 /* static usart file dev */
 static struct file filp_u[USART_NUM];
 static unsigned short dma_pos[USART_NUM];/* dma detector position */
+/* data bus id */
+static unsigned short system_ID = 10475;
+/* export */
+FS_SHELL_STATIC(system_ID,system_ID,sizeof(system_ID),_CB_RT_);
 /* usart code */
 const unsigned int usart_msg[USART_NUM][9] = {
 { USART0,GPIOA,GPIO_PIN_9/* tx pin */,GPIOA,GPIO_PIN_10/* rx pin */,

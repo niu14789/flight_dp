@@ -27,6 +27,8 @@
 #include "string.h"
 #include "f_ops.h"
 #include "fs_allocate.h"
+/* supply  */
+#define ALLOCATE_FLASH_SUPPLY (1)
 /* default the root pointer */
 static inode_vmn * p_vmn_link_header = (void*)0;
 /* some defes */
@@ -89,7 +91,7 @@ static int system_insert(inode_vmn * p_vmn)
 	return 0;
 }
 /* allocate supple or not */
-#if ALLOCATE_EXAPP_SUPPLY /* Whether Extended Applications are Supported */	
+#if ALLOCATE_FLASH_SUPPLY /* Whether Extended Applications are Supported */	
 /* search inode */
 static inode_vmn * inode_search(unsigned int base , unsigned int size , unsigned int *base_offset)
 {
@@ -100,18 +102,22 @@ static inode_vmn * inode_search(unsigned int base , unsigned int size , unsigned
 		int i = *base_offset;	
 		/* get the base addr */
 		id_enter = (inode_identify *)(base + i);
+#if SUPPLY_ASSIST_TAIL		
 		/*--------------------------*/
 		unsigned int * end_file_dec = (unsigned int *)(base + i);
 		/*--------------------------*/
+#endif	
 		/* search loop */
 		for( ; i < size ; i += 4 )
 		{
 			if(id_enter->id_l == 0xAFBC562D && 
 				 id_enter->id_h == 0x2b74113c)
 			{
+#if SUPPLY_ASSIST_TAIL				
 				/* check */
 				if( (unsigned int)id_enter->entrance > base &&
 						(unsigned int)id_enter->entrance < ( base + size ) )
+#endif				
 				{
 					/* ------------ */
 					i += 4;
@@ -125,6 +131,7 @@ static inode_vmn * inode_search(unsigned int base , unsigned int size , unsigned
 			}
 			/* incremter */
 			id_enter = (inode_identify *)(((unsigned int)id_enter) + 4);
+#if SUPPLY_ASSIST_TAIL			
 			/* end file decateltes */
 			if( end_file_dec[0] == 0xF1F2F3F4 && 
 					end_file_dec[1] == 0xE1E2E3E4 && 
@@ -136,6 +143,7 @@ static inode_vmn * inode_search(unsigned int base , unsigned int size , unsigned
 			/*---------------------*/
 			end_file_dec ++;
 			/*---------------------*/
+#endif			
 		}
 		/* cannot found */
 		return NULL;
@@ -145,12 +153,10 @@ static inode_vmn * inode_search(unsigned int base , unsigned int size , unsigned
 /* inode start */
 static inode_vmn * inode_start(int seq)
 {
-#if ALLOCATE_EXAPP_SUPPLY  /* Whether Extended Applications are Supported */	
+#if ALLOCATE_FLASH_SUPPLY  /* Whether Extended Applications are Supported */	
 	const unsigned int base[][2] = 
   {
-		{ALLOCATE_RAM_ROM_START_ADDR,ALLOCATE_RAM_ROM_SIZE},
-		{0x480000,0x20000},
-		{0x460000,0x20000},
+		{0x08010000,0x2000},
 #if 0
 		{0x490000,20*1024},
 #endif		
@@ -175,7 +181,7 @@ static inode_vmn * inode_start(int seq)
   }
 	else if( seq >= 1 )
 	{   
-#if ALLOCATE_EXAPP_SUPPLY	/* Whether Extended Applications are Supported */		
+#if ALLOCATE_FLASH_SUPPLY	/* Whether Extended Applications are Supported */		
 		/* initial some tasks */
 		static unsigned int cnt = 0;
 		static unsigned char step = 0;

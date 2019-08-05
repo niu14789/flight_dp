@@ -27,7 +27,7 @@
 /* USER CODE BEGIN Includes */
 #include "fs.h"
 /* USER CODE END Includes */
-
+#include "irom.h"
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
