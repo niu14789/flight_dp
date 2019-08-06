@@ -48,6 +48,8 @@ static int icm206_heap_init(void)
 	icm.ops.read  = icm206_fread;
 	icm.ops.open  = icm206_fopen;
 	icm.ops.ioctl = icm206_ioctrl;
+	/* init flags */
+  icm.flip.f_oflags = __FS_IS_INODE_OK|__FS_IS_INODE_INIT; 	
 	/* return icm206 result */
 	return icm206_init();
 }
@@ -136,10 +138,27 @@ static int icm206_ioctrl(FAR struct file *filp, int cmd, unsigned long arg,void 
 			/* read */
 			icm206_read_sensor(pri_data);
 			/* end of cmd */
+			break;
 		case 4:
 			/* icm206_init */
 		  ret = icm206_init();
 		  /* end of cmd */
+		  break;
+		case 5:
+			/* icm_spi_init */
+		  icm_spi_init();
+		  /* end of cmd */
+		  break;
+		case 6:
+			/* spi data */
+		  ret = spi0_wr_byte(arg);
+		  /* end of file */		
+      break;
+    case 7:
+			/* spi data */
+		  spi0_multiple_read(pri_data,arg);
+		  /* end of file */		
+      break;			
 		default:
 			break;
 	}
@@ -281,7 +300,8 @@ static void icm_spi_init(void)
 	gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_5);       // SCK
 	gpio_init(GPIOA, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, GPIO_PIN_6); // MISO
 	gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_7);       // MOSI
-
+	/* set cs pin */
+	gpio_bit_set(GPIOA, GPIO_PIN_4);
 	/* SPI0 parameter config */
 	Spiparam.trans_mode = SPI_TRANSMODE_FULLDUPLEX;
 	Spiparam.device_mode = SPI_MASTER;

@@ -30,7 +30,7 @@
 #define MAG_I2C_ADDRESS    (0x18)
 
 /* timeout detecter */
-#define TIMEOUT_DETECTER(a,b) { if( a ++ > 2000 ){ return b ;} }
+#define TIMEOUT_DETECTER(a,b) { if( a ++ > 20000 ){ return b ;} }
 /* function declares */
 
 static int st480_heap_init(void);

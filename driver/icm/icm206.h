@@ -155,7 +155,7 @@ enum Gbw { // gyro bandwidth
 #define USED_MAG              0  /* as default . disable the mag sensor */
 
 /* some decleare */
-
+static void icm_spi_init(void);
 static int icm206_init(void);
 int icm206_heap_init(void);
 static void icm206_read_sensor( ICM206_INS_DEF * ins );

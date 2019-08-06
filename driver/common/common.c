@@ -36,7 +36,7 @@ static unsigned int system_run_ms = 0;
 /* regrister a system task */
 FS_SHELL_STATIC(system_run_thread,system_run_thread,4,_CB_TIMER_|_CB_IT_IRQN_(TASK_PERIOD0_ID));
 /* define some data */
-static struct file * imu , * gps , * led , * pwm , * log , * st480;
+static struct file * imu , * gps , * led , * pwm , * log , * st480 , * baro;
 /* heap init */
 static int common_heap_init(void)
 {
@@ -71,6 +71,8 @@ static int common_default_config(void)
 	log = open("log.o",__FS_OPEN_ALWAYS);
 	/* open st480 mag */
 	st480 = open("st480.o",__FS_OPEN_ALWAYS);
+	/* open baro */
+	baro = open("dps310.o",__FS_OPEN_ALWAYS);
 	/*----------*/
 	return FS_OK;
 }
@@ -160,6 +162,19 @@ int user_read_msg(ST480_MAG_DEF * mag)
 	int ret = fs_read(st480,mag,sizeof(ST480_MAG_DEF));
 	/* return */
 	return ret;	
+}
+/* int user read baro data */
+int user_read_baro(BARO_METER_DATA * baro_raw)
+{
+  /* open st480 ok ? */
+	if( baro == NULL )
+	{
+		return FS_OK;// oh on . we got nothing
+	}	
+	/* ok . let's roll it */	
+	int ret = fs_read(baro,baro_raw,sizeof(BARO_METER_DATA));
+	/* return */
+	return ret;
 }
 /* end of file */
 

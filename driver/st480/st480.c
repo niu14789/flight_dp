@@ -453,7 +453,7 @@ static int st480_basic_init(void)
 	abyTemp[0] = 0x60;
 	abyTemp[1] = 0x00;
 	abyTemp[2] = 0x18;
-	abyTemp[3] = 0x80;
+	abyTemp[3] = 0x08;
 	/* the addr of register   Note: Address[1:0] = 0x00 */
 	ret = st480_i2c_wr_byte( abyTemp , 4, abyTemp, 1 );
 	/* get wr ok or timeout */
@@ -469,21 +469,6 @@ static int st480_basic_init(void)
 	if( ret == FS_OK )
 	{
 		/* time out */
-		return FS_ERR;
-		/* end of func */
-	}	
-  /* try to read mag data and check them */
-	ST480_MAG_DEF std;
-	/* full of zero */
-	memset(&std,0,sizeof(std));
-	/* read data */
-	st480_read_mag(&std);
-	/* check */
-	if( std.mag[0] == 0 &&  
-		  std.mag[1] == 0 &&  
-	    std.mag[2] == 0 )
-	{
-		/* oh on . we got a bad data */
 		return FS_ERR;
 		/* end of func */
 	}

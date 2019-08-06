@@ -41,9 +41,10 @@ FS_SHELL_STATIC(algo_task_100ms,algo_task_100ms,4,_CB_TIMER_|_CB_IT_IRQN_(TASK_P
 /* register a idle task */
 FS_SHELL_STATIC(algo_task_idle,algo_task_idle,4,_CB_TIMER_|_CB_IT_IRQN_(_CB_IDLE_));
 /* define a template struct to get data */
-ICM206_INS_DEF icm206_d;
-GPS_User_t     gps_user;
-ST480_MAG_DEF  st480_user; /* user mag data */
+ICM206_INS_DEF  icm206_d;
+GPS_User_t      gps_user;
+ST480_MAG_DEF   st480_user; /* user mag data */
+BARO_METER_DATA baro_user;  /* user baro data*/ 
 /* heap init */
 static int algo_heap_init(void)
 {
@@ -77,6 +78,19 @@ static void algo_task_1ms(void)
 {
 	/* system app . read imu data */
 	user_read_imu(&icm206_d);
+#if 1 /* read baro at 20 ms */
+	static unsigned int baro_freq = 0;
+	/* read */
+	if( ! ( baro_freq++ % 20 ) )
+	{
+	  /* read */
+		if( user_read_baro(&baro_user) != FS_OK )
+		{
+			/* good . looks like that we've got some data */
+			/* end of func */			
+		}
+	}
+#endif	
 	/* add your own code here */
 	
 	/* end of func */

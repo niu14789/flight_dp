@@ -21,6 +21,15 @@ typedef struct{
 	float pitch;
 	float yaw;
 }ATTITUDE_DEF;
+
+/* define s */
+typedef struct _BARO_METER_DATA_
+{
+	float m_fTempature;
+	float m_fPress;
+	float m_fAltitude;
+}BARO_METER_DATA;
+
 /* redef */
 typedef struct
 {
