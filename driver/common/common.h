@@ -38,6 +38,8 @@ int user_read_imu(ICM206_INS_DEF * icm);
 int user_set_pwm(unsigned short * pwm_t,unsigned short len);
 int user_set_led(unsigned short mode );
 int user_update_log( const void * edata ,unsigned short len );
+int user_read_msg(ST480_MAG_DEF * mag);
+
 /* end of files */
 #endif
 

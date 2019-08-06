@@ -43,6 +43,7 @@ FS_SHELL_STATIC(algo_task_idle,algo_task_idle,4,_CB_TIMER_|_CB_IT_IRQN_(_CB_IDLE
 /* define a template struct to get data */
 ICM206_INS_DEF icm206_d;
 GPS_User_t     gps_user;
+ST480_MAG_DEF  st480_user; /* user mag data */
 /* heap init */
 static int algo_heap_init(void)
 {
@@ -91,7 +92,7 @@ static void algo_task_4ms(void)
 static void algo_task_10ms(void)
 {
 	/* system app . read gps data */
-	if( user_read_gps(&gps_user) != 0 )
+	if( user_read_gps(&gps_user) != FS_OK )
 	{
 		/* good . looks like that we've got some data */
 		/* end of func */
@@ -110,6 +111,15 @@ static void algo_task_20ms(void)
 	/* send log */
 	user_update_log(log_data,sizeof(log_data));
 	/*----------*/
+#endif	
+/* read mag dta */
+#if 1 /* configable */
+	 /* system app . read mag data */
+   if( user_read_msg(&st480_user) != FS_OK )
+	 {
+		/* good . looks like that we've got some data */
+		/* end of func */		 
+	 }
 #endif	
 	/* add your own code here */
 	

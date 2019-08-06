@@ -14,7 +14,7 @@ typedef struct{
 /* mpu9250 mag def */
 typedef struct{
 	float mag[3];
-}MPU9250_MAG_DEF;
+}ST480_MAG_DEF;
 /* attitude define */
 typedef struct{
 	float roll;

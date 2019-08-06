@@ -36,7 +36,7 @@ static unsigned int system_run_ms = 0;
 /* regrister a system task */
 FS_SHELL_STATIC(system_run_thread,system_run_thread,4,_CB_TIMER_|_CB_IT_IRQN_(TASK_PERIOD0_ID));
 /* define some data */
-static struct file * imu , * gps , * led , * pwm , * log;
+static struct file * imu , * gps , * led , * pwm , * log , * st480;
 /* heap init */
 static int common_heap_init(void)
 {
@@ -69,6 +69,8 @@ static int common_default_config(void)
 	pwm = open("pwm.o",__FS_OPEN_ALWAYS);
 	/* open log */
 	log = open("log.o",__FS_OPEN_ALWAYS);
+	/* open st480 mag */
+	st480 = open("st480.o",__FS_OPEN_ALWAYS);
 	/*----------*/
 	return FS_OK;
 }
@@ -146,7 +148,38 @@ int user_update_log( const void * edata ,unsigned short len )
 	/* return ok */
 	return FS_OK;
 }
+/* user read mag */
+int user_read_msg(ST480_MAG_DEF * mag)
+{
+  /* open st480 ok ? */
+	if( st480 == NULL )
+	{
+		return FS_OK;// oh on . we got nothing
+	}	
+	/* ok . let's roll it */
+	int ret = fs_read(st480,mag,sizeof(ST480_MAG_DEF));
+	/* return */
+	return ret;	
+}
 /* end of file */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

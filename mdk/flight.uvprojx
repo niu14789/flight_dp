@@ -577,6 +577,11 @@
               <FileType>1</FileType>
               <FilePath>..\driver\led\led.c</FilePath>
             </File>
+            <File>
+              <FileName>st480.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\st480\st480.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
