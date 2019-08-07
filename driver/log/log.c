@@ -73,6 +73,7 @@ static int log_default_config(void)
 	/* config msg */
 	uart_config_msg msg;
 	/* init param */
+	msg.mode = 0;
 	msg.index = 3;
 	msg.baudrate = 460800;
 	msg.tx_mode = _UART_TX_DMA;

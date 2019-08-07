@@ -78,6 +78,7 @@ static int gps_default_config(void)
 	/* config msg */
 	uart_config_msg msg;
 	/* init param */
+	msg.mode = 0;
 	msg.index = 0;
 	msg.rx_dma_buffer = (unsigned int)gps_dma_d0;
 	msg.rx_dma_deepth = sizeof(gps_dma_d0);

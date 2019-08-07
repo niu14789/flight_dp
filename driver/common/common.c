@@ -36,7 +36,8 @@ static unsigned int system_run_ms = 0;
 /* regrister a system task */
 FS_SHELL_STATIC(system_run_thread,system_run_thread,4,_CB_TIMER_|_CB_IT_IRQN_(TASK_PERIOD0_ID));
 /* define some data */
-static struct file * imu , * gps , * led , * pwm , * log , * st480 , * baro , * adc;
+static struct file * imu , * gps , * led , * pwm , * log ;
+static struct file * st480 , * baro , * adc , * rc_sbus;
 /* heap init */
 static int common_heap_init(void)
 {
@@ -75,6 +76,8 @@ static int common_default_config(void)
 	baro = open("dps310.o",__FS_OPEN_ALWAYS);
 	/* open adc */
 	adc = open("adc.o",__FS_OPEN_ALWAYS);
+	/* sbus and rc */
+	rc_sbus = open("sbus.d",__FS_OPEN_ALWAYS);
 	/*----------*/
 	return FS_OK;
 }
@@ -217,6 +220,19 @@ int user_read_battery_voltage(power_user_s * power)
 	int ret = fs_read(adc,power,sizeof(power_user_s));
 	/* return */
 	return ret;	
+}
+/* int user read rc data */
+int user_read_sbus(rcs_user_s * rcs)
+{
+  /* open adc ok ? */
+	if( rc_sbus == NULL )
+	{
+		return FS_OK;// oh on . we got nothing
+	}	
+	/* ok . let's roll it */	
+	int ret = fs_read(rc_sbus,rcs,sizeof(rcs_user_s));
+	/* return */
+	return ret;		
 }
 /* end of file */
 

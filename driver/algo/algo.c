@@ -46,6 +46,7 @@ GPS_User_t      gps_user;
 ST480_MAG_DEF   st480_user; /* user mag data */
 BARO_METER_DATA baro_user;  /* user baro data*/ 
 power_user_s    bat_user;   /* user battery voltage */
+rcs_user_s      sbus_user;  /* user sbus data */
 /* heap init */
 static int algo_heap_init(void)
 {
@@ -129,13 +130,30 @@ static void algo_task_20ms(void)
 #endif	
 /* read mag dta */
 #if 1 /* configable */
-	 /* system app . read mag data */
-   if( user_read_msg(&st480_user) != FS_OK )
-	 {
-		/* good . looks like that we've got some data */
-		/* end of func */		 
-	 }
+ /* system app . read mag data */
+ if( user_read_msg(&st480_user) != FS_OK )
+ {
+	/* good . looks like that we've got some data */
+	/* end of func */		 
+ }
 #endif	
+#if 1 /* configable */
+ if( user_read_sbus(&sbus_user) != FS_OK )
+ {
+	/* good . looks like that we've got some data */
+	 if( sbus_user.flag == 0 )
+	 {
+		 /* good . remote is on line . add your own code here */
+		 /* end of func */
+	 }
+	 else
+	 {
+		 /* oh on . frame lost . add some tag */
+		 /* end of func */
+	 }
+	/* end of func */			 
+ }
+#endif
 	/* add your own code here */
 	
 	/* end of func */		

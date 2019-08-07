@@ -622,6 +622,11 @@
               <FileType>1</FileType>
               <FilePath>..\driver\log\log.c</FilePath>
             </File>
+            <File>
+              <FileName>sbus.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\sbus\sbus.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

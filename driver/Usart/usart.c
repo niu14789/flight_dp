@@ -120,7 +120,7 @@ static int usart_fwrite(FAR struct file *filp, FAR const void *buffer, unsigned 
 /* read data */
 unsigned int usart_fread(FAR struct file *filp, FAR void * buffer, unsigned int buflen)
 {
-	return usart_dma_read(filp->f_multi,filp->f_user0,filp->f_user1 & 0xffff,buffer,buflen);
+	return usart_dma_read(filp->f_multi,filp->f_user0,filp->f_user1,buffer,buflen);
 }
 /* ioctrl */
 /* usart ioctrl */
@@ -192,8 +192,17 @@ static int usart_init_global( const uart_config_msg * msg )
   /* configration */
 	usart_baudrate_set(usart_msg[msg->index][0], msg->baudrate);
 	usart_word_length_set(usart_msg[msg->index][0], USART_WL_8BIT);
-	usart_parity_config(usart_msg[msg->index][0], USART_PM_NONE);
-	usart_stop_bit_set(usart_msg[msg->index][0], USART_STB_1BIT);
+	/* parity and stop bits _UART_PAR_EVEN << 8 | _UART_STOP_2 */
+  if( msg->mode == 0 )
+	{
+	  usart_parity_config(usart_msg[msg->index][0], USART_PM_NONE);
+	  usart_stop_bit_set(usart_msg[msg->index][0], USART_STB_1BIT);
+	}
+	else
+	{
+	  usart_parity_config(usart_msg[msg->index][0], USART_PM_EVEN);
+	  usart_stop_bit_set(usart_msg[msg->index][0], USART_STB_2BIT);	
+	}
   /* usart mode settings */
 	usart_receive_config(usart_msg[msg->index][0], USART_RECEIVE_ENABLE);     // enable receive
 	usart_transmit_config(usart_msg[msg->index][0], USART_TRANSMIT_ENABLE);   // enable send 	
@@ -231,7 +240,7 @@ static int usart_init_global( const uart_config_msg * msg )
 		dma_channel_disable(usart_msg[msg->index][5], (dma_channel_enum)usart_msg[msg->index][6]);
   }
 	/* dma mode or not */
-	if( msg->rx_mode == _UART_RX_DMA )	
+	if( msg->rx_mode == _UART_RX_DMA || msg->rx_mode == _UART_RX_IT )	
 	{
 		/* DMA RX MODE CONFIG */
 		dma_deinit(usart_msg[msg->index][7], (dma_channel_enum)usart_msg[msg->index][8]);
@@ -289,6 +298,20 @@ static int usart_dma_write( unsigned int index , unsigned short txrx_m,const voi
 /* static usart read vio dma */
 static unsigned int usart_dma_read(unsigned int index,unsigned int dma_buf_addr,unsigned int dma_deepth,void * rdata,unsigned int rlen)
 {
+	/* get read mode */
+	unsigned char rx_mode = ( dma_deepth >> 16 ) & 0xff;
+	/* get real deepth */
+	dma_deepth &= 0xffff;
+	/* get idle it flag */
+	if( rx_mode & _UART_RX_IT )
+	{
+		/* get idle flag */
+		if( usart_flag_get( usart_msg[index][0] , USART_FLAG_IDLE ) == RESET )
+		{
+			/* got nothing */
+			return FS_OK;
+		}
+  }
 	/* get and send */
 	unsigned int dma_cnt = dma_deepth - dma_transfer_number_get(usart_msg[index][7], (dma_channel_enum)usart_msg[index][8]);
 	/* get data */

@@ -22,30 +22,36 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#ifndef __COMMON_H__
-#define __COMMON_H__
-
-#include "state.h"
-
-/* declares */
-static int common_default_config(void);
-static int common_heap_init(void);
-static void system_run_thread(void);
-/* all above functions are for export */
-extern unsigned long long read_sys_time_us(void);
-int user_read_gps(GPS_User_t * state);
-int user_read_imu(ICM206_INS_DEF * icm);
-int user_set_pwm(unsigned short * pwm_t,unsigned short len);
-int user_set_one_pwm(unsigned short motor,unsigned short pwmvalue);
-int user_set_led(unsigned short mode );
-int user_update_log( const void * edata ,unsigned short len );
-int user_read_msg(ST480_MAG_DEF * mag);
-int user_read_baro(BARO_METER_DATA * baro_raw);
-int user_set_sevor_pwm(unsigned short pwmvalue);
-int user_read_battery_voltage(power_user_s * power);
-int user_read_sbus(rcs_user_s * rcs);
-
-/* end of files */
+#ifndef __SBUS_H__
+#define __SBUS_H__
+/* interface */
+#include "fs.h"
+/* default value */
+#define SBUS_DEFAULT_VALUE  (1500)
+/* some nessciry scale */
+#define SBUS_SCALE_FACTOR ((2000.0f - 1000.0f) / (1800.0f - 200.0f))
+#define SBUS_SCALE_OFFSET ((unsigned int)(1000.0f - (((2000.0f - 1000.0f) / (1800.0f - 200.0f)) * 200.0f + 0.5f)))
+/* end of func */
+static int sbus_default_config(void);
+static int sbus_heap_init(void);
+static void sbus_callback(void);
+static int sbus_decode(unsigned short *values, unsigned char *frame_cache);
+static void sbus_reset_channels(unsigned short * rc,unsigned int len);
+/* file inteface */
+static struct file * sbus_fopen (FAR struct file *filp);
+static unsigned int sbus_fread(FAR struct file *filp, FAR void * buffer, unsigned int buflen);
+static int sbus_ioctrl(FAR struct file *filp, int cmd, unsigned long arg,void *pri_data);
+/* end of file */
 #endif
+
+
+
+
+
+
+
+
+
+
 
 
