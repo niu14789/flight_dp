@@ -68,6 +68,15 @@ typedef struct
 	unsigned char		numSV;			/**&lt; Number of SVs used in Nav Solution */
 	/* end of data */
 }GPS_User_t;
+/* motor default define */
+typedef enum
+{
+	MOTOR_M1    = 0,
+	MOTOR_M2    = 1,
+	MOTOR_M3    = 2,
+	MOTOR_M4    = 3, 
+	SERVO       = 4,     
+}motor_type_enum;
 /* system math def */
 typedef struct
 {

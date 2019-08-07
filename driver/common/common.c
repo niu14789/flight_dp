@@ -122,6 +122,20 @@ int user_set_pwm(unsigned short * pwm_t,unsigned short len)
 		return FS_OK;// oh on . we got nothing
 	}		
 	/* ok . let's roll it */
+	fs_ioctl( pwm , 1 , len , pwm_t );
+	// rev
+	return FS_OK;
+}
+/* user set pwm */
+int user_set_one_pwm(unsigned short motor,unsigned short pwmvalue)
+{
+  /* open gps ok ? */
+	if( pwm == NULL )
+	{
+		return FS_OK;// oh on . we got nothing
+	}		
+	/* ok . let's roll it */
+	fs_ioctl( pwm , 1 , motor<<16 | pwmvalue , 0 );
 	// rev
 	return FS_OK;
 }

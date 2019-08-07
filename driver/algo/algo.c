@@ -112,7 +112,7 @@ static void algo_task_10ms(void)
 		/* end of func */
 	}
 	/* add your own code here */
-	
+
 	/* end of func */	
 }
 /* task list */
@@ -150,7 +150,7 @@ static void algo_task_100ms(void)
 		algo_task_500ms();
 	}
 	/* add you own code here at 100ms */
-	
+
 	/* end of func */
 }
 static void algo_task_500ms(void)

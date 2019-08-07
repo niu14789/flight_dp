@@ -16,33 +16,28 @@
   *
   ******************************************************************************
 	* BEEP TIM3 CHANNEL1 PWM Gerente
-	* LED is TIM4 CH3 and CH4
+	* common is TIM4 CH3 and CH4
   */
 /* USER CODE END Header */
-
+#ifndef __PWM_H__
+#define __PWM_H__
 /* Includes ------------------------------------------------------------------*/
-
-#ifndef __COMMON_H__
-#define __COMMON_H__
-
+#include "fs.h"
 #include "state.h"
+/* function declare */
 
-/* declares */
-static int common_default_config(void);
-static int common_heap_init(void);
-static void system_run_thread(void);
-/* all above functions are for export */
-extern unsigned long long read_sys_time_us(void);
-int user_read_gps(GPS_User_t * state);
-int user_read_imu(ICM206_INS_DEF * icm);
-int user_set_pwm(unsigned short * pwm_t,unsigned short len);
-int user_set_one_pwm(unsigned short motor,unsigned short pwmvalue);
-int user_set_led(unsigned short mode );
-int user_update_log( const void * edata ,unsigned short len );
-int user_read_msg(ST480_MAG_DEF * mag);
-int user_read_baro(BARO_METER_DATA * baro_raw);
+#define MOTOR_RADIO_MAX 2000
 
-/* end of files */
+static int pwm_heap_init(void);
+static int pwm_default_config(void);
+static void pwm_basic_init(void);
+static void pwm_set_one_value(unsigned short motor,unsigned short pwmvalue );
+static struct file * pwm_fopen (FAR struct file *filp);
+static void pwm_set_value(unsigned short * pwmvalue , unsigned int len);
+static int pwm_ioctrl(FAR struct file *filp, int cmd, unsigned long arg,void *pri_data);
+
 #endif
+
+/* end of file */
 
 
