@@ -30,13 +30,13 @@
 #include "state.h"
 #include "common.h"
 /* fs inode system register */
-FS_INODE_REGISTER("/common.o",common,common_heap_init,0);
+FS_INODE_REGISTER("common.o",common,common_heap_init,0);
 /* system time define */
 static unsigned int system_run_ms = 0;
 /* regrister a system task */
 FS_SHELL_STATIC(system_run_thread,system_run_thread,4,_CB_TIMER_|_CB_IT_IRQN_(TASK_PERIOD0_ID));
 /* define some data */
-static struct file * imu , * gps , * led , * pwm , * log , * st480 , * baro;
+static struct file * imu , * gps , * led , * pwm , * log , * st480 , * baro , * adc;
 /* heap init */
 static int common_heap_init(void)
 {
@@ -48,7 +48,7 @@ static int common_heap_init(void)
 	common.config = common_default_config;
 	/* file interface */
 	common.flip.f_inode = &common;
-	common.flip.f_path = "/common.o";
+	common.flip.f_path = "common.o";
 	/* heap */
 	
 	/* add your own code here */
@@ -73,6 +73,8 @@ static int common_default_config(void)
 	st480 = open("st480.o",__FS_OPEN_ALWAYS);
 	/* open baro */
 	baro = open("dps310.o",__FS_OPEN_ALWAYS);
+	/* open adc */
+	adc = open("adc.o",__FS_OPEN_ALWAYS);
 	/*----------*/
 	return FS_OK;
 }
@@ -135,7 +137,20 @@ int user_set_one_pwm(unsigned short motor,unsigned short pwmvalue)
 		return FS_OK;// oh on . we got nothing
 	}		
 	/* ok . let's roll it */
-	fs_ioctl( pwm , 1 , motor<<16 | pwmvalue , 0 );
+	fs_ioctl( pwm , 2 , motor<<16 | pwmvalue , 0 );
+	// rev
+	return FS_OK;
+}
+/* users set servo pwm */
+int user_set_sevor_pwm(unsigned short pwmvalue)
+{
+  /* open gps ok ? */
+	if( pwm == NULL )
+	{
+		return FS_OK;// oh on . we got nothing
+	}		
+	/* ok . let's roll it */
+	fs_ioctl( pwm , 3 , pwmvalue , 0 );
 	// rev
 	return FS_OK;
 }
@@ -189,6 +204,19 @@ int user_read_baro(BARO_METER_DATA * baro_raw)
 	int ret = fs_read(baro,baro_raw,sizeof(BARO_METER_DATA));
 	/* return */
 	return ret;
+}
+/* int user read battery voltage */
+int user_read_battery_voltage(power_user_s * power)
+{
+  /* open adc ok ? */
+	if( adc == NULL )
+	{
+		return FS_OK;// oh on . we got nothing
+	}	
+	/* ok . let's roll it */	
+	int ret = fs_read(adc,power,sizeof(power_user_s));
+	/* return */
+	return ret;	
 }
 /* end of file */
 

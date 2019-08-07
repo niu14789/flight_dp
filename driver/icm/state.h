@@ -77,6 +77,11 @@ typedef enum
 	MOTOR_M4    = 3, 
 	SERVO       = 4,     
 }motor_type_enum;
+
+typedef struct
+{
+  float bat_voltage;
+}power_user_s;
 /* system math def */
 typedef struct
 {

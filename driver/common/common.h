@@ -41,6 +41,8 @@ int user_set_led(unsigned short mode );
 int user_update_log( const void * edata ,unsigned short len );
 int user_read_msg(ST480_MAG_DEF * mag);
 int user_read_baro(BARO_METER_DATA * baro_raw);
+int user_set_sevor_pwm(unsigned short pwmvalue);
+int user_read_battery_voltage(power_user_s * power);
 
 /* end of files */
 #endif

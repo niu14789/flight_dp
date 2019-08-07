@@ -19,23 +19,20 @@
 	* common is TIM4 CH3 and CH4
   */
 /* USER CODE END Header */
-#ifndef __PWM_H__
-#define __PWM_H__
+#ifndef __ADC_H__
+#define __ADC_H__
 /* Includes ------------------------------------------------------------------*/
 #include "fs.h"
 #include "state.h"
 /* function declare */
 
-#define MOTOR_RADIO_MAX 2000
-
-static int pwm_heap_init(void);
-static int pwm_default_config(void);
-static void pwm_basic_init(void);
-static void pwm_set_one_value(unsigned short motor,unsigned short pwmvalue );
-static struct file * pwm_fopen (FAR struct file *filp);
-static void pwm_set_value(unsigned short * pwmvalue , unsigned int len);
-static int pwm_ioctrl(FAR struct file *filp, int cmd, unsigned long arg,void *pri_data);
-static void pwm_set_servo(unsigned short pwmvalue);
+static int adc_heap_init(void);
+static int adc_default_config(void);
+static void adc_basic_init(void);
+static struct file * adc_fopen (FAR struct file *filp);
+static unsigned int adc_fread(FAR struct file *filp, FAR void * buffer, unsigned int buflen);
+static int adc_get_value(power_user_s * m_power);
+static int adc_ioctrl(FAR struct file *filp, int cmd, unsigned long arg,void *pri_data);
 
 #endif
 

@@ -45,6 +45,7 @@ ICM206_INS_DEF  icm206_d;
 GPS_User_t      gps_user;
 ST480_MAG_DEF   st480_user; /* user mag data */
 BARO_METER_DATA baro_user;  /* user baro data*/ 
+power_user_s    bat_user;   /* user battery voltage */
 /* heap init */
 static int algo_heap_init(void)
 {
@@ -149,6 +150,15 @@ static void algo_task_100ms(void)
 	{
 		algo_task_500ms();
 	}
+#if 1
+	/* get battery voltage */
+	if( user_read_battery_voltage(&bat_user) == FS_OK )
+	{
+		/* good . looks like that we've got some data */
+		/* end of func */			
+	}
+	/*---------------------*/
+#endif	
 	/* add you own code here at 100ms */
 
 	/* end of func */

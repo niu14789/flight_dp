@@ -61,13 +61,19 @@ static void pwm_basic_init(void)
 {
 	/* enable clock first */
 	rcu_periph_clock_enable(RCU_GPIOC);
+	rcu_periph_clock_enable(RCU_GPIOB);
 	rcu_periph_clock_enable(RCU_AF);
 	rcu_periph_clock_enable(RCU_TIMER7);
+	rcu_periph_clock_enable(RCU_TIMER0);
 	/*Configure PA0 PA1 PA2(TIMER7 CH0 CH1 CH2) as alternate function*/
 	gpio_init(GPIOC,GPIO_MODE_AF_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_6);
 	gpio_init(GPIOC,GPIO_MODE_AF_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_7);
 	gpio_init(GPIOC,GPIO_MODE_AF_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_8);
 	gpio_init(GPIOC,GPIO_MODE_AF_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_9);
+	/* configure PB0 to TIME0 ch2 ON */
+	gpio_pin_remap_config(GPIO_TIMER0_PARTIAL_REMAP,ENABLE);
+	/* remap */
+	gpio_init(GPIOB,GPIO_MODE_AF_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_0);
 	/* -----------------------------------------------------------
 	 time7 init
 	-------------------------------------------------------------*/
@@ -75,6 +81,7 @@ static void pwm_basic_init(void)
 	timer_parameter_struct timer_initpara;
 	/* deinit TIMER7 */
 	timer_deinit(TIMER7);
+	timer_deinit(TIMER0);
 	/* TIMER7 configuration */
 	timer_initpara.prescaler         = 59;
 	timer_initpara.alignedmode       = TIMER_COUNTER_EDGE;
@@ -83,19 +90,26 @@ static void pwm_basic_init(void)
 	timer_initpara.clockdivision     = TIMER_CKDIV_DIV1;
 	timer_initpara.repetitioncounter = 0;
 	timer_init(TIMER7,&timer_initpara);
+	/* config time 0 */
+	timer_init(TIMER0,&timer_initpara);
 	/* CH0,CH1,CH2 and CH3 configuration in PWM mode */
 	timer_ocintpara.outputstate  = TIMER_CCX_ENABLE;
 	timer_ocintpara.outputnstate = TIMER_CCXN_DISABLE;
 	timer_ocintpara.ocpolarity   = TIMER_OC_POLARITY_HIGH;
 	timer_ocintpara.ocnpolarity  = TIMER_OCN_POLARITY_HIGH;
-	timer_ocintpara.ocidlestate  = TIMER_OC_IDLE_STATE_LOW;
+	timer_ocintpara.ocidlestate  = TIMER_OC_IDLE_STATE_HIGH;
 	timer_ocintpara.ocnidlestate = TIMER_OCN_IDLE_STATE_LOW;
 	/* CH0,CH1,CH2 and CH3 configuration in PWM mode */
 	timer_channel_output_config(TIMER7,TIMER_CH_0,&timer_ocintpara);
 	timer_channel_output_config(TIMER7,TIMER_CH_1,&timer_ocintpara);
 	timer_channel_output_config(TIMER7,TIMER_CH_2,&timer_ocintpara);
 	timer_channel_output_config(TIMER7,TIMER_CH_3,&timer_ocintpara);
-
+  /* set timer0*/
+	timer_ocintpara.outputstate  = TIMER_CCX_ENABLE;
+	timer_ocintpara.outputnstate = TIMER_CCXN_ENABLE;
+	/* CH0 in PWM mode */
+	timer_channel_output_config(TIMER0,TIMER_CH_1,&timer_ocintpara);
+	/*------------------------------------------*/
 	/* CH0 configuration in PWM mode0,duty cycle 40% */
 	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_0,2000);
 	timer_channel_output_mode_config(TIMER7,TIMER_CH_0,TIMER_OC_MODE_PWM0);
@@ -111,10 +125,17 @@ static void pwm_basic_init(void)
 	/* CH3 configuration in PWM mode0,duty cycle 40% */
 	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_3,2000);
 	timer_channel_output_mode_config(TIMER7,TIMER_CH_3,TIMER_OC_MODE_PWM0);
-	/* TIMER0 primaryoutput function enable */
+	
+	/* TIMER0 CH0 in PWM mode0 duty cycle 40% */
+	timer_channel_output_pulse_value_config(TIMER0,TIMER_CH_1,5000-2000);
+	timer_channel_output_mode_config(TIMER0,TIMER_CH_1,TIMER_OC_MODE_PWM0);	
+		
+	/* TIMER7 primaryoutput function enable */
 	timer_primary_output_config(TIMER7,ENABLE);
+	timer_primary_output_config(TIMER0,ENABLE);
 	/* auto-reload preload enable */
 	timer_enable(TIMER7);	
+	timer_enable(TIMER0);
 	/* end of func */
 }
 /* file interface */
@@ -144,7 +165,13 @@ static int pwm_ioctrl(FAR struct file *filp, int cmd, unsigned long arg,void *pr
 		case 2:
 			/* pwm set one value */
 			pwm_set_one_value(arg>>16,arg&0xffff);
+		  /* end of cmd */
 			break;
+		case 3:
+			/* pwm set servo */
+		  pwm_set_servo(arg);
+		  /* end of func */
+		  break;
 		default:
 			break;
 	}
@@ -183,6 +210,17 @@ static void pwm_set_one_value(unsigned short motor,unsigned short pwmvalue )
   /* channel mptor */	
 	timer_channel_output_pulse_value_config(TIMER7,motor,( pwmvalue > MOTOR_RADIO_MAX ? MOTOR_RADIO_MAX : pwmvalue ) + 2000 );
 	/* end of func */
+}
+/* pwm set servo */
+static void pwm_set_servo(unsigned short pwmvalue)
+{
+	/* transfer to N out */
+	unsigned short pwm_rea = ( pwmvalue > MOTOR_RADIO_MAX ? MOTOR_RADIO_MAX : pwmvalue ) + 2000 ;
+	/* transfer */
+	pwm_rea = 5000 - pwm_rea;
+  /* channel mptor */	
+	timer_channel_output_pulse_value_config(TIMER0,TIMER_CH_1,pwm_rea);
+	/* end of func */	
 }
 
 
