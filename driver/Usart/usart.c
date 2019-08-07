@@ -43,9 +43,11 @@ const unsigned int usart_msg[USART_NUM][9] = {
 { USART1,GPIOA,GPIO_PIN_2/* tx pin */,GPIOA,GPIO_PIN_3/* rx pin */,
   DMA0,DMA_CH6/* TX DMA */,DMA0,DMA_CH5/* RX DMA */},/* USART1 config message */
 { USART2,GPIOB,GPIO_PIN_10/* tx pin */,GPIOB,GPIO_PIN_11/* rx pin */,
-  DMA0,DMA_CH1/* TX DMA */,DMA0,DMA_CH2/* RX DMA */},/* USART1 config message */
+  DMA0,DMA_CH1/* TX DMA */,DMA0,DMA_CH2/* RX DMA */},/* USART2 config message */
 { UART3,GPIOC,GPIO_PIN_10/* tx pin */,GPIOC,GPIO_PIN_11/* rx pin */,
-  DMA1,DMA_CH4/* TX DMA */,DMA1,DMA_CH2/* RX DMA */},/* USART1 config message */
+  DMA1,DMA_CH4/* TX DMA */,DMA1,DMA_CH2/* RX DMA */},/* UART3 config message */
+{ UART4,GPIOC,GPIO_PIN_12/* tx pin */,GPIOD,GPIO_PIN_2/* rx pin */,
+  0,0/* TX DMA */,0,0/* RX DMA */},/* UART4 config message */
 };
 /* heap init */
 static int usart_heap_init(void)

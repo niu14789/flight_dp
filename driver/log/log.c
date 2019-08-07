@@ -36,7 +36,7 @@ static int log_fwrite(FAR struct file *filp, FAR const void * buffer, unsigned i
 /* fs inode system register */
 FS_INODE_REGISTER("log.o",log,log_heap_init,0);
 /* some test define */
-static struct file * usart3_p;
+static struct file * uart4_p;
 /* heap init */
 static int log_heap_init(void)
 {
@@ -63,9 +63,9 @@ static int log_heap_init(void)
 static int log_default_config(void)
 {
 	/* open usart 3 */
-	usart3_p = open("/UART/3",__FS_OPEN_ALWAYS);
+	uart4_p = open("/UART/4",__FS_OPEN_ALWAYS);
 	/* config */
-	if( usart3_p == NULL )
+	if( uart4_p == NULL )
 	{
 		/* can not find some uart */
 		return FS_ERR;
@@ -74,12 +74,12 @@ static int log_default_config(void)
 	uart_config_msg msg;
 	/* init param */
 	msg.mode = 0;
-	msg.index = 3;
+	msg.index = 4;
 	msg.baudrate = 460800;
-	msg.tx_mode = _UART_TX_DMA;
+	msg.tx_mode = _UART_TX_NARMOL;
 	msg.rx_mode = _UART_RX_DISABLE;
 	/* init */
-	fs_ioctl(usart3_p,0,sizeof(msg),&msg);
+	fs_ioctl(uart4_p,0,sizeof(msg),&msg);
 	/* end of file */
 	return FS_OK;
 }
@@ -95,7 +95,7 @@ static int log_fwrite(FAR struct file *filp, FAR const void * buffer, unsigned i
 	/* ignore the compiler warning */
 	(void)filp;
 	/* send usart data */
-  fs_write(usart3_p,buffer,buflen);
+  fs_write(uart4_p,buffer,buflen);
 	/* return */
 	return FS_OK;
 }

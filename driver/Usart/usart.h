@@ -28,7 +28,7 @@
 #include "fs_config.h"
 /* functions declare */
 
-#define USART_NUM    (4) /* supply amount of usart */
+#define USART_NUM    (5) /* supply amount of usart */
 
 static int usart_heap_init(void);
 static int usart_default_config(void);
