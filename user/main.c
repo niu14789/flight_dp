@@ -24,13 +24,14 @@
 #include "gd32f30x.h"
 #include <stdio.h>
 /* Private includes ----------------------------------------------------------*/
+#define FC_SW_VERSION_ALONE (100)
 /* USER CODE BEGIN Includes */
 #include "fs.h"
 /* USER CODE END Includes */
 #include "irom.h"
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+const unsigned int __FS_version[3] = {0xeabc2547,FC_SW_VERSION_ALONE,0x3526ec88};
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
