@@ -272,8 +272,12 @@ static void sbus_callback(void)
 	/* search */
 	for(  i = 0 ; i < 25 ; i ++ )
 	{
+		/* tail byte */
+		unsigned char tail = sbus_frame[(i+24)%25];
 		/* loop */
-		if(sbus_frame[i] == 0x0f && sbus_frame[(i+24)%25] == 0x0)
+		if( sbus_frame[i] == 0x0f && 
+			( tail == 0x00 || tail == 0x04 ||
+		    tail == 0x14 || tail == 0x24 || tail == 0x34 ))
 		{
 			/* get data */
 			frame_count++;
