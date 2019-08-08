@@ -32,7 +32,7 @@
 /* file interface */
 struct file * sbus_usart1 = NULL;
 /* static valve channel */
-static unsigned short sbus_channel_data[10];
+static unsigned short sbus_channel_data[SBUS_CHANNEL_DEFAULT];
 /*static data frame */
 static unsigned char sbus_frame[50];
 /* sbus reciver type */
@@ -41,7 +41,7 @@ static unsigned char sbus_dma_cache[128];
 /* define the inode */
 FS_INODE_REGISTER("sbus.d",sbus,sbus_heap_init,0);
 /* fs thread 20ms */
-FS_SHELL_STATIC(sbus_callback,sbus_callback,4,_CB_TIMER_|_CB_IT_IRQN_(TASK_PERIOD3_ID));
+FS_SHELL_STATIC(sbus_callback,sbus_callback,4,_CB_TIMER_|_CB_IT_IRQN_(TASK_PERIOD1_ID));
 /* data struct define */
 struct sbus_bit_pick 
 {
