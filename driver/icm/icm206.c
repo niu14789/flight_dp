@@ -242,12 +242,12 @@ static void icm206_read_sensor( ICM206_INS_DEF * ins )
 	/* get */
   gpio_bit_set(GPIOA, GPIO_PIN_4);
   /* change */
-  ins->accel[1] = (short)((buffer[0] << 8 ) + buffer[1]) * ACCEL_SENSITIVITY;	
-	ins->accel[0] = (short)((buffer[2] << 8 ) + buffer[3]) * ACCEL_SENSITIVITY;
+  ins->accel[0] = (short)((buffer[0] << 8 ) + buffer[1]) * ACCEL_SENSITIVITY;	
+	ins->accel[1] = (short)((buffer[2] << 8 ) + buffer[3]) * ACCEL_SENSITIVITY;
 	ins->accel[2] = (short)((buffer[4] << 8 ) + buffer[5]) * ACCEL_SENSITIVITY;
 	/* get gyro */
-	ins->gyro[1] = (short)((buffer[8]   << 8 ) + buffer[9])  * GYRO_SENSITIVITY * DEG2RAD ; // transfer to rad
-	ins->gyro[0] = (short)((buffer[10]  << 8 ) + buffer[11]) * GYRO_SENSITIVITY * DEG2RAD ; // transfer to rad
+	ins->gyro[0] = (short)((buffer[8]   << 8 ) + buffer[9])  * GYRO_SENSITIVITY * DEG2RAD ; // transfer to rad
+	ins->gyro[1] = (short)((buffer[10]  << 8 ) + buffer[11]) * GYRO_SENSITIVITY * DEG2RAD ; // transfer to rad
 	ins->gyro[2] = (short)((buffer[12]  << 8 ) + buffer[13]) * GYRO_SENSITIVITY * DEG2RAD ; // transfer to rad
 	/* get temperature */
 	ins->icm206_temperature = (short)((buffer[6] << 8) + buffer[7]) * TEMPERATURE_SENSITIVITY + 25;
