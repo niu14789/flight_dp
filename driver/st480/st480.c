@@ -48,11 +48,11 @@ static int st480_heap_init(void)
 	st480.ops.read = st480_fread;
 	st480.ops.ioctl = st480_ioctrl;
 	/* heap */
-	st480_basic_init();
+	int ret = st480_basic_init();
 	/* add your own code here */
   st480.i_flags = __FS_IS_INODE_OK|__FS_IS_INODE_INIT; 	
 	/* return ok */
-	return FS_OK;
+	return ret;
 }
 /* st480_default_config st480 init */
 static int st480_default_config(void)
@@ -488,8 +488,22 @@ static int st480_read_mag( ST480_MAG_DEF * st480_d )
 	/* can not read or not */
 	if( 7 != iRet )
 	{
+		/* st480 error count */
+		static unsigned char st480_error_count = 0;
+		/* over three times */
+		if( st480_error_count ++ > 3 )
+		{
+			/* clear count flag */
+			st480_error_count = 0;
+			/* deinit i2c */
+			i2c_deinit(I2C0);
+			/* init again */
+			st480_basic_init();
+			/* end of func */
+		}
 		/* can not read */
 		return FS_ERR;
+		/* end of func */
 	}
 	/* is data updata ? */
 	if (! ( abyTemp[0] & 0x10 ) )
