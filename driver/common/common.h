@@ -44,6 +44,8 @@ int user_read_baro(BARO_METER_DATA * baro_raw);
 int user_set_sevor_pwm(unsigned short pwmvalue);
 int user_read_battery_voltage(power_user_s * power);
 int user_read_sbus(rcs_user_s * rcs);
+int user_load_param(flash_block_addr block,void * src,unsigned int len);
+int user_save_param(flash_block_addr block,const void * src,unsigned int len);
 
 /* end of files */
 #endif

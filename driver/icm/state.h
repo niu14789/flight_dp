@@ -107,6 +107,18 @@ typedef enum
 	SERVO       = 4,     
 }motor_type_enum;
 
+/* flash block */
+typedef enum
+{
+	FLASH_BLOCK0 = 0x08038000,/* 2k */
+	FLASH_BLOCK1 = 0x08038800,/* 2k */
+	FLASH_BLOCK2 = 0x08039000,/* 2k */
+	FLASH_BLOCK3 = 0x08039800,/* 2k */
+	FLASH_BLOCK4 = 0x0803A000,/* 2k */
+	FLASH_BLOCK5 = 0x0803A800,/* 2k */
+	FLASH_BLOCK6 = 0x0803B000,/* 2k */
+}flash_block_addr;
+
 typedef struct
 {
   float bat_voltage;

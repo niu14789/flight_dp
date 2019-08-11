@@ -38,6 +38,7 @@ FS_SHELL_STATIC(system_run_thread,system_run_thread,4,_CB_TIMER_|_CB_IT_IRQN_(TA
 /* define some data */
 static struct file * imu , * gps , * led , * pwm , * log ;
 static struct file * st480 , * baro , * adc , * rc_sbus;
+static struct file * flash;
 /* heap init */
 static int common_heap_init(void)
 {
@@ -78,6 +79,10 @@ static int common_default_config(void)
 	adc = open("adc.o",__FS_OPEN_ALWAYS);
 	/* sbus and rc */
 	rc_sbus = open("sbus.d",__FS_OPEN_ALWAYS);
+	/* open flash */
+	flash = open("flash.o",__FS_OPEN_ALWAYS);
+	/* open end . load system params */
+	
 	/*----------*/
 	return FS_OK;
 }
@@ -233,6 +238,36 @@ int user_read_sbus(rcs_user_s * rcs)
 	int ret = fs_read(rc_sbus,rcs,sizeof(rcs_user_s));
 	/* return */
 	return ret;		
+}
+/* int user read param */
+int user_load_param(flash_block_addr block,void * src,unsigned int len)
+{
+  /* open adc ok ? */
+	if( flash == NULL )
+	{
+		return FS_ERR;// oh on . we got nothing
+	}	
+	/* ok . let's roll it */		
+	unsigned int prid[2] = { block , (unsigned int)src };
+	/* read flash */
+	int ret = fs_ioctl(flash,2,len,prid);
+	/* return */
+	return ret;
+}
+/* int user read param */
+int user_save_param(flash_block_addr block,const void * src,unsigned int len)
+{
+  /* open adc ok ? */
+	if( flash == NULL )
+	{
+		return FS_ERR;// oh on . we got nothing
+	}	
+	/* ok . let's roll it */		
+	unsigned int prid[2] = { block , (unsigned int)src };
+	/* read flash */
+	int ret = fs_ioctl(flash,1,len,prid);
+	/* return */
+	return ret;
 }
 /* end of file */
 
