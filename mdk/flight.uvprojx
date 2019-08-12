@@ -632,6 +632,16 @@
               <FileType>1</FileType>
               <FilePath>..\driver\sbus\sbus.c</FilePath>
             </File>
+            <File>
+              <FileName>wifi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\wifi\wifi.c</FilePath>
+            </File>
+            <File>
+              <FileName>battery.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\battery\battery.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
