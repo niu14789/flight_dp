@@ -26,7 +26,7 @@
 #include "state.h"
 /* function declare */
 
-#define MOTOR_RADIO_MAX 2000
+#define MOTOR_RADIO_MAX ( 2000 - 1 )
 
 static int pwm_heap_init(void);
 static int pwm_default_config(void);

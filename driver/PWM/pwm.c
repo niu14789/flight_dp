@@ -83,10 +83,10 @@ static void pwm_basic_init(void)
 	timer_deinit(TIMER7);
 	timer_deinit(TIMER0);
 	/* TIMER7 configuration */
-	timer_initpara.prescaler         = 59;
+	timer_initpara.prescaler         = 120 - 1 ; /* 1Mhz */
 	timer_initpara.alignedmode       = TIMER_COUNTER_EDGE;
 	timer_initpara.counterdirection  = TIMER_COUNTER_UP;
-	timer_initpara.period            = 4999;
+	timer_initpara.period            = 2500 - 1; /* 2500 us */
 	timer_initpara.clockdivision     = TIMER_CKDIV_DIV1;
 	timer_initpara.repetitioncounter = 0;
 	timer_init(TIMER7,&timer_initpara);
@@ -111,23 +111,23 @@ static void pwm_basic_init(void)
 	timer_channel_output_config(TIMER0,TIMER_CH_1,&timer_ocintpara);
 	/*------------------------------------------*/
 	/* CH0 configuration in PWM mode0,duty cycle 40% */
-	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_0,2000);
+	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_0,1000 - 1 );
 	timer_channel_output_mode_config(TIMER7,TIMER_CH_0,TIMER_OC_MODE_PWM0);
 
 	/* CH1 configuration in PWM mode0,duty cycle 40% */
-	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_1,2000);
+	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_1,1000 - 1 );
 	timer_channel_output_mode_config(TIMER7,TIMER_CH_1,TIMER_OC_MODE_PWM0);
 
 	/* CH2 configuration in PWM mode0,duty cycle 40% */
-	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_2,2000);
+	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_2,1000 - 1 );
 	timer_channel_output_mode_config(TIMER7,TIMER_CH_2,TIMER_OC_MODE_PWM0);
 
 	/* CH3 configuration in PWM mode0,duty cycle 40% */
-	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_3,2000);
+	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_3,1000 - 1 );
 	timer_channel_output_mode_config(TIMER7,TIMER_CH_3,TIMER_OC_MODE_PWM0);
 	
 	/* TIMER0 CH0 in PWM mode0 duty cycle 40% */
-	timer_channel_output_pulse_value_config(TIMER0,TIMER_CH_1,5000-2000);
+	timer_channel_output_pulse_value_config(TIMER0,TIMER_CH_1,2500-1000);
 	timer_channel_output_mode_config(TIMER0,TIMER_CH_1,TIMER_OC_MODE_PWM0);	
 		
 	/* TIMER7 primaryoutput function enable */
@@ -189,13 +189,13 @@ static void pwm_set_value(unsigned short * pwmvalue , unsigned int len)
 	}
 	/* get pwm value */
   /* channel 1 */	
-	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_0,( pwmvalue[0] > MOTOR_RADIO_MAX ? MOTOR_RADIO_MAX : pwmvalue[0] ) + 2000 );
+	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_0,( pwmvalue[0] > MOTOR_RADIO_MAX ? MOTOR_RADIO_MAX : pwmvalue[0] ));
 	/* channel 2 */
-	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_1,( pwmvalue[1] > MOTOR_RADIO_MAX ? MOTOR_RADIO_MAX : pwmvalue[1] ) + 2000 );
+	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_1,( pwmvalue[1] > MOTOR_RADIO_MAX ? MOTOR_RADIO_MAX : pwmvalue[1] ));
 	/* channel 3 */
-	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_2,( pwmvalue[2] > MOTOR_RADIO_MAX ? MOTOR_RADIO_MAX : pwmvalue[2] ) + 2000 );
+	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_2,( pwmvalue[2] > MOTOR_RADIO_MAX ? MOTOR_RADIO_MAX : pwmvalue[2] ));
 	/* channel 4 */
-	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_3,( pwmvalue[3] > MOTOR_RADIO_MAX ? MOTOR_RADIO_MAX : pwmvalue[3] ) + 2000 );	
+	timer_channel_output_pulse_value_config(TIMER7,TIMER_CH_3,( pwmvalue[3] > MOTOR_RADIO_MAX ? MOTOR_RADIO_MAX : pwmvalue[3] ));	
 	/* end of func */
 }
 /* static set pwm value rang 0~2000 */
@@ -208,14 +208,14 @@ static void pwm_set_one_value(unsigned short motor,unsigned short pwmvalue )
 		return;
 	}
   /* channel mptor */	
-	timer_channel_output_pulse_value_config(TIMER7,motor,( pwmvalue > MOTOR_RADIO_MAX ? MOTOR_RADIO_MAX : pwmvalue ) + 2000 );
+	timer_channel_output_pulse_value_config(TIMER7,motor,( pwmvalue > MOTOR_RADIO_MAX ? MOTOR_RADIO_MAX : pwmvalue ));
 	/* end of func */
 }
 /* pwm set servo */
 static void pwm_set_servo(unsigned short pwmvalue)
 {
 	/* transfer to N out */
-	unsigned short pwm_rea = ( pwmvalue > MOTOR_RADIO_MAX ? MOTOR_RADIO_MAX : pwmvalue ) + 2000 ;
+	unsigned short pwm_rea = ( pwmvalue > MOTOR_RADIO_MAX ? MOTOR_RADIO_MAX : pwmvalue );
 	/* transfer */
 	pwm_rea = 5000 - pwm_rea;
   /* channel mptor */	
