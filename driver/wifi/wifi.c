@@ -73,7 +73,7 @@ static int wifi_default_config(void)
 	uart_config_msg msg;
 	/* init param */
 	msg.mode = 0;//none 8 1
-	msg.index = 1;
+	msg.index = 3;
 	msg.rx_dma_buffer = (unsigned int)wifi_dma_cache;
 	msg.rx_dma_deepth = sizeof(wifi_dma_cache);
 	msg.baudrate = 115200;
