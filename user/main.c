@@ -24,7 +24,7 @@
 #include "gd32f30x.h"
 #include <stdio.h>
 /* Private includes ----------------------------------------------------------*/
-#define FC_SW_VERSION_ALONE (106)
+#define FC_SW_VERSION_ALONE (108)
 /* USER CODE BEGIN Includes */
 #include "fs.h"
 /* USER CODE END Includes */

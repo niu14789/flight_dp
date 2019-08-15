@@ -41,7 +41,7 @@ static unsigned char sbus_dma_cache[128];
 /* define the inode */
 FS_INODE_REGISTER("sbus.d",sbus,sbus_heap_init,0);
 /* fs thread 20ms */
-FS_SHELL_STATIC(sbus_callback,sbus_callback,4,_CB_TIMER_|_CB_IT_IRQN_(TASK_PERIOD1_ID));
+FS_SHELL_STATIC(sbus_callback,sbus_callback,4,_CB_TIMER_|_CB_IT_IRQN_(TASK_PERIOD0_ID));
 /* data struct define */
 struct sbus_bit_pick 
 {
@@ -261,7 +261,7 @@ static void sbus_callback(void)
 	/* read */
 	len = fs_read(sbus_usart1,sbus_frame,sizeof(sbus_frame));
 	/* check 1 */
-	if( len != 25 )
+	if( len < 25 )
 	{
 		/* error count */
 		sbus_error_count++;
@@ -270,14 +270,15 @@ static void sbus_callback(void)
 		/* end of func */
 	}
 	/* search */
-	for(  i = 0 ; i < 25 ; i ++ )
+	for(  i = 0 ; i < len ; i ++ )
 	{
 		/* tail byte */
 		unsigned char tail = sbus_frame[(i+24)%25];
 		/* loop */
 		if( sbus_frame[i] == 0x0f && 
 			( tail == 0x00 || tail == 0x04 ||
-		    tail == 0x14 || tail == 0x24 || tail == 0x34 ))
+		    tail == 0x14 || tail == 0x24 || tail == 0x34 ||
+		    tail == 0x0C || tail == 0x2C || tail == 0x4C || tail == 0x6C ))
 		{
 			/* get data */
 			frame_count++;
