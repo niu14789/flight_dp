@@ -642,6 +642,11 @@
               <FileType>1</FileType>
               <FilePath>..\driver\battery\battery.c</FilePath>
             </File>
+            <File>
+              <FileName>xn297l_basic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\xn297\xn297l_basic.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
