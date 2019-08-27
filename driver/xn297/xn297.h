@@ -54,7 +54,7 @@ static int rf_init(void);
 #define  IRQ_STATUS       (gpio_input_bit_get(IRQ_GPIO_PORT,IRQ_PIN))
 
 #define  DEFAULT_TX_ADDE {0xCC,0xCC,0xCC,0xCC,0xCC}
-
+/*-----------------------------------------------------------------------------------*/
 #define  TRANS_ENHANCE_MODE    1 
 #define  TRANS_BURST_MODE      2  
 
@@ -149,6 +149,111 @@ static int rf_init(void);
 #define         EN_ACK_PAYLOAD                 1
 #define         ACK_PAYLOAD_WIDTH              20
 #endif
+
+/* rf link */
+#define TX_MODE             0
+#define RX_MODE             1
+#define RF_WORK_MODE        RX_MODE
+
+#define RF_RELINK_CH        81
+#define RF_BINDONG_CH       77
+#define FREQ_CH_NUMBER      10
+
+#define RF_NORMAL_CH        36
+
+#if (RF_WORK_MODE == TX_MODE)
+#define RF_LINK_TX_TIME     2
+#define RF_LINK_RX_TIME     8
+#define RF_LINK_CYCLE       10
+#define RF_HOPPING_TIME     10
+#else
+#define RF_LINK_TX_TIME     8
+#define RF_LINK_RX_TIME     2
+#define RF_HOPPING_TIME     9
+#define RF_LINK_CYCLE       10 
+#endif
+/* head */
+#define RF_LINK_BUFFER_HEAD     0x20
+#define RF_LINK_BUFFER_LEN      18
+/* enum0 */
+enum e_link_step
+{
+	RF_STEP_NULL = 0,
+	RF_STEP_TX =1,
+	RF_STEP_RX =2,
+	RF_STEP_HOPPING =3,
+};
+/* enum1 */
+enum e_link_status
+{
+	DISCONNECCTING  =   0,
+	CONNECCTING   =   1,
+};
+/* enum2 */
+enum e_remote_function_control
+{
+	VIDEO_FUNCTION_BIT = 1U << 1,
+	PHOTO_FUNCTION_BIT = 1U << 2,
+	RETURN_HOME_FUNCTION_BIT = 1U << 3,
+	RISE_LAND_FUNCTION_BIT = 1U << 4,
+	MODE_FUNCTION_BIT = 1U << 5,
+	SCRAM_FUNCTION_BIT = 1U << 6,
+};
+/* typedef struct */
+#pragma pack (1)
+typedef struct REMOTE_PACKET_STRU
+{
+	unsigned char    key_status;          //遥控器按键状态 
+	unsigned char    function_status;     //遥控器功能 
+	unsigned short    throttle;           //油门    1000~2000 中间值1500
+	unsigned short    aileron;            //旋转    1000~2000 中间值1500
+	unsigned short    elevator;           //前后    1000~2000 中间值1500
+	unsigned short    rudder;             //左右    1000~2000 中间值1500
+	unsigned short    yuntai;             //云台控制  1000~2000 中间值1500
+	unsigned short    camera_zoom;        //相机控制  1000~2000 中间值1500
+	unsigned char     battery_voltage;    //遥控电压值*10
+	//unsigned char     checksum;    
+}remote_packet_stru;
+#pragma pack ()
+/* enum4 */
+enum e_rf_rx_buffer_index 
+{
+	KEY_STATUS_INDEX = 3,
+	FUNCTION_STATUS_INDEX = 4,
+	THROTTLE_INDEX = 5,
+	AILERON_INDEX  = 7,
+	ELEVATOR_INDEX = 9,
+	RUDDER_INDEX = 11,
+	YUNTAI_INDEX = 13,
+	CAMERA_INDEX = 15,
+	BATTERY_INDEX = 17,    
+};
+/* enable */
+typedef struct PLANE_PACKET_STRU
+{
+	unsigned char     head;
+	unsigned char     len;
+	unsigned short    plane_staus;        //飞机状态
+  /* battery */
+	unsigned char     battery_voltage;    //电压值*10
+	unsigned char     checksum;    
+}plane_packet_stru;
+/* link stru */
+typedef struct LINK_STRU
+{
+	volatile unsigned int  link_timer_counter;
+	volatile unsigned char hopping_counter;
+	unsigned char          link_status;
+	unsigned char          binding_status;
+	unsigned char          loss_link_counter;
+	unsigned char          link_step;
+	unsigned char          tx_buffer[PAYLOAD_WIDTH];       //发送缓存
+	unsigned char          rx_buffer[PAYLOAD_WIDTH];       //接收缓存
+	unsigned char          rf_new_address[5];              //RF ID 
+	unsigned char          remoter_version[3];             //遥控版本号
+	unsigned short         plane_function_flag;            //飞机功能标志位
+}link_stru;
+/*------------------------------------------------------------------*/
 
 #endif
 

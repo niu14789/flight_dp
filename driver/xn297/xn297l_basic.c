@@ -27,6 +27,11 @@
 #include "state.h"
 #include "gd32f30x.h"
 #include "string.h"
+/* some defines */
+static link_stru s_rf_link;
+
+int config_default(void);
+
 /* USER CODE BEGIN Includes */
 FS_INODE_REGISTER("xn297.d",xn297,xn297_heap_init,0);
 /* defined functions */
@@ -34,6 +39,7 @@ static int xn297_heap_init(void)
 {
 	/* init as default */
 	xn297.flip.f_inode = &xn297;
+	xn297.config = config_default;
 	/* file interface  */
 	xn297.ops.open  = xn297_fopen;
 #if 0
@@ -45,6 +51,15 @@ static int xn297_heap_init(void)
 	/* return xn297 result */
 	return rf_init();
 }
+
+int rf_binding(void);
+
+int config_default(void)
+{
+	rf_binding();
+}
+
+
 /* file & driver 's interface */
 static struct file * xn297_fopen (FAR struct file *filp)
 {
@@ -182,7 +197,7 @@ static void rf_set_tx(void)
 	/* chip enable */
 	CE_LOW;
 	/* write reg */
-	rf_write_reg(W_REGISTER + CONFIG_XN297L,  0X8E);							// 将RF设置成TX模式    
+	rf_write_reg(W_REGISTER + CONFIG_XN297L , 0X8E);
 	/* chip disable */
 	CE_HIGH;
 	/* end of func */
@@ -204,7 +219,7 @@ static unsigned char rf_get_statue(void)
 	return rf_read_reg(STATUS)&0x70;
 }
 /* clear tf status */
-static void RF_ClearStatus(void)
+static void rf_clear_status(void)
 {
 	rf_write_reg(W_REGISTER + STATUS,0x70);
 }
@@ -377,7 +392,164 @@ static int rf_init(void)
   /* set addr and check */
 	return rf_write_address(tx_addr_def);
 }
-
+/* void rf binding delay */
+static void rf_binding_delay(unsigned int t)
+{
+	while(t--);
+}
+/* rf check sum */
+static unsigned char rf_checksum(unsigned char *pbuf,unsigned char len)
+{
+	/* check sum */
+	unsigned char checksum = 0;
+	/* data */
+	for( int i = 0 ; i < len ; i ++ )
+	{
+			checksum ^= pbuf[i];        
+	}
+	/* return */
+	return checksum;
+}
+/* */
+static int rf_receive_data(unsigned char *pbuf,unsigned char len)
+{
+	/* read data */
+	rf_read_multiple(R_RX_PAYLOAD,pbuf, len); 
+	/* check data */
+	return (rf_checksum( pbuf ,len - 1 ) == pbuf[len - 1]) ? FS_OK : FS_ERR;
+	/* end of func */
+}
+/* rf binding thread */
+static int rf_binding(void)
+{    
+	/* some neccery define */
+	unsigned char   binding_step = 0;
+	unsigned char   binding_success_flag = 0;    
+	unsigned char   u8_temp;
+	unsigned int    exit_binding_counter = 0;
+	/* default addr */
+	const unsigned char tx_addr_def[] = DEFAULT_TX_ADDE;
+	/* create a random data as a seek*/
+	unsigned short addr_create = rand();
+	/* set rf to default freq and channel */
+	rf_write_address((unsigned char *)tx_addr_def);
+	/* default channel */
+	RF_SetChannel(RF_BINDONG_CH);
+	/* set the rf new address */
+	s_rf_link.rf_new_address[2] = addr_create >> 8;
+	s_rf_link.rf_new_address[3] = addr_create & 0xff; 
+	/* set to rx mode */
+	rf_set_rx();	
+	/* initloop */
+	while( binding_success_flag == 0 )
+	{       
+		/* default cmd case */
+		switch (binding_step)
+		{        
+			/* first get rf data */					
+			case 0:   
+				/* read statue */        
+				u8_temp = rf_get_statue(); 
+				/* got some data or not */
+				if( u8_temp & RX_DR_FLAG )		                                           
+				{  
+					/* read data */
+					rf_read_multiple(R_RX_PAYLOAD,s_rf_link.rx_buffer, PAYLOAD_WIDTH);            
+					/* copy data */
+					memcpy(&s_rf_link.tx_buffer[1],&s_rf_link.rf_new_address[0],5);
+          /* create buffer */
+					s_rf_link.tx_buffer[0] = RF_LINK_BUFFER_HEAD;
+					s_rf_link.tx_buffer[6] = binding_step | 0x10;
+					/* calibate the txbuffer sum */
+					s_rf_link.tx_buffer[ PAYLOAD_WIDTH -1 ] = rf_checksum(s_rf_link.tx_buffer,PAYLOAD_WIDTH-1); 
+					/* send the data */
+					rf_tx_transmintdata(s_rf_link.tx_buffer,PAYLOAD_WIDTH);
+					/* receive ok ? */
+					if( s_rf_link.rx_buffer[6] == 2 )
+					{
+						binding_step ++; 
+					}          					
+				}
+				/* delay some ms to wait until send ok */	
+				rf_binding_delay(10*8000);
+				/* clear rf flag and fifo buffer */
+				rf_clear_fifo();
+				rf_clear_status();				
+				/* end of func */
+				break;
+				/* end of func */
+			case 1: 
+			case 2:
+				/* read statue */        
+				u8_temp = rf_get_statue(); 
+				/* got some data or not */
+				if( u8_temp & RX_DR_FLAG )		                                           
+				{ 
+					/* clear exit counter */
+					exit_binding_counter = 0;
+					/* get data */
+					if( rf_receive_data( s_rf_link.rx_buffer , PAYLOAD_WIDTH ) == FS_OK )
+					{                                               
+						/* save new addr */
+						memcpy(&s_rf_link.rf_new_address[0],&s_rf_link.rx_buffer[1],5);
+						/* save new version */
+						memcpy(&s_rf_link.remoter_version[0],&s_rf_link.rx_buffer[10],3);
+						/* copy data */
+						memcpy(&s_rf_link.tx_buffer[1],&s_rf_link.rf_new_address[0],5);
+						/* create data buffer */                               
+						s_rf_link.tx_buffer[0] = RF_LINK_BUFFER_HEAD;
+						s_rf_link.tx_buffer[6] = binding_step | 0x10; 
+						/* calibate the txbuffer sum */
+						s_rf_link.tx_buffer[PAYLOAD_WIDTH-1] = rf_checksum(s_rf_link.tx_buffer,PAYLOAD_WIDTH-1); 
+						/* send the data */
+						rf_tx_transmintdata(s_rf_link.tx_buffer,PAYLOAD_WIDTH);
+						/* delay some ms to wait until send ok */		
+						if( binding_step < 2 )
+						{
+							binding_step++; 
+						}
+					} 
+					/* delay some ms to wait until send ok */
+					rf_binding_delay(10*8000);
+					/* clear rf flag and fifo buffer */
+					rf_clear_fifo();
+					rf_clear_status ();					
+				}      
+				else
+				{
+					/* can not read data */
+					if( binding_step == 2 )
+					{   
+            /* over time */						
+						if( exit_binding_counter++ > 2000 )
+						{
+							/* init again */
+							rf_init();
+							/* set the rf to new addr */
+							rf_write_address(s_rf_link.rf_new_address);
+							/* into rx mode */
+							rf_set_rx();
+							/* out */
+							binding_success_flag = 1;				
+							/* end of cmd */
+						}                                
+					}
+				}
+				break;
+			default:
+				break;            
+		}            
+	} 
+	/* bindling ok */
+	if( binding_success_flag == 1 )
+	{
+//			//rf_id_store();
+//			rf_write_address(s_rf_link.rf_new_address);
+		return FS_OK;
+	}
+	/* error */
+  return FS_ERR;
+}
 
 
 
