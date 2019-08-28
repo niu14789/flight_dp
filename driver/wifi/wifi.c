@@ -33,7 +33,7 @@
 struct file * wifi_usart3 = NULL;
 /* wifi reciver type */
 /* gps define */
-static unsigned char wifi_dma_cache[128];
+static unsigned char wifi_dma_cache[1024];
 /* define the inode */
 FS_INODE_REGISTER("wifi.d",wifi,wifi_heap_init,0);
 /* heap init */
@@ -78,10 +78,12 @@ static int wifi_default_config(void)
 	msg.rx_dma_deepth = sizeof(wifi_dma_cache);
 	msg.baudrate = 115200;
 	msg.tx_mode = _UART_TX_DMA;
-	msg.rx_mode = _UART_RX_DMA;
+	msg.rx_mode = _UART_RX_IT;
 	/* init */
 	fs_ioctl(wifi_usart3,0,sizeof(msg),&msg);	
 	/* create a thread here */
+	shell_create_dynamic("wifi_send_thread",wifi_send_thread,1);//4ms
+	shell_create_dynamic("wifi_receive_thread",wifi_receive_thread,1);//4ms
 	/*return*/
 	return FS_OK;
 }
@@ -117,9 +119,27 @@ static int wifi_ioctrl(FAR struct file *filp, int cmd, unsigned long arg,void *p
 	/* return OK */
 	return ret;
 }
-
-
-
+/* send and rev thread */
+static void wifi_send_thread(void)
+{
+	wifi_link_data_send();
+}
+/* wifi rev thread */
+static void wifi_receive_thread(void)
+{
+	wifi_link_data_receive();
+}
+/* wifi send bytes */
+void wifi_send_bytes(const void * data,unsigned int len)
+{
+	/* send to usart3 */
+	fs_write(wifi_usart3,data,len);
+}
+/* wifi get bytes */
+int wifi_receive_bytes(void * data,unsigned int len)
+{
+	return fs_read(wifi_usart3,data,len);
+}
 
 
 

@@ -31,6 +31,12 @@ static int wifi_default_config(void);
 static unsigned int wifi_fread(FAR struct file *filp, FAR void * buffer, unsigned int buflen);
 static struct file * wifi_fopen (FAR struct file *filp);
 static int wifi_ioctrl(FAR struct file *filp, int cmd, unsigned long arg,void *pri_data);
+void wifi_send_bytes(const void * data,unsigned int len);
+int wifi_receive_bytes(void * data,unsigned int len);
+void wifi_link_data_send(void);
+void wifi_link_data_receive(void);
+static void wifi_send_thread(void);
+static void wifi_receive_thread(void);
 
 #endif
 
