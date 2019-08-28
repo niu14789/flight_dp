@@ -68,6 +68,10 @@ void wifi_link_data_receive(void)
 						/* switch */						
 						steps = 2;
 					}
+					else
+					{
+						steps = 0;
+					}
 					break;	
 				case 2:
 					/* len = payload + checksum */
