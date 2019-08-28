@@ -28,7 +28,7 @@
 #include "gd32f30x.h"
 #include "string.h"
 /* some defines */
-static link_stru s_rf_link;
+link_stru s_rf_link;
 
 int config_default(void);
 
@@ -56,7 +56,12 @@ int rf_binding(void);
 
 int config_default(void)
 {
-	rf_binding();
+	 if( rf_binding() == FS_OK )
+	 {
+		/* delete init thread and create a read data thread */
+		shell_create_dynamic("rf_link_timer",rf_link_timer,0);	//1ms
+  	shell_create_dynamic("rf_link_function",rf_link_function,0);	//4ms 
+	 }
 }
 
 
@@ -158,7 +163,7 @@ static unsigned char rf_read_reg( unsigned char reg )
 	return tmp;
 }
 /* spi rf write buf */
-static void rf_write_multiple( unsigned char reg, const unsigned char *pBuf, unsigned char length)
+void rf_write_multiple( unsigned char reg, const unsigned char *pBuf, unsigned char length)
 {
 	/* enable spi dev */ 
 	CSN_LOW;    
@@ -175,7 +180,7 @@ static void rf_write_multiple( unsigned char reg, const unsigned char *pBuf, uns
 	/* end of func */
 }
 /* static spi read buf */
-static void rf_read_multiple( unsigned char reg, unsigned char *pBuf,  unsigned char length)
+void rf_read_multiple( unsigned char reg, unsigned char *pBuf,  unsigned char length)
 {
 	/* enable spi dev */ 
 	CSN_LOW;    
@@ -192,7 +197,7 @@ static void rf_read_multiple( unsigned char reg, unsigned char *pBuf,  unsigned 
 	/* end of func */                                                                 		
 }
 /* set to tx mode */
-static void rf_set_tx(void)
+void rf_set_tx(void)
 {
 	/* chip enable */
 	CE_LOW;
@@ -203,7 +208,7 @@ static void rf_set_tx(void)
 	/* end of func */
 }
 /* set to rx mode */
-static void rf_set_rx(void)
+void rf_set_rx(void)
 {
 	/* chip enable */
 	CE_LOW;
@@ -214,29 +219,29 @@ static void rf_set_rx(void)
 	/* end of func */
 }
 /* get rf status */
-static unsigned char rf_get_statue(void)
+unsigned char rf_get_statue(void)
 {
 	return rf_read_reg(STATUS)&0x70;
 }
 /* clear tf status */
-static void rf_clear_status(void)
+void rf_clear_status(void)
 {
 	rf_write_reg(W_REGISTER + STATUS,0x70);
 }
 /* clear rf fifo */
-static void rf_clear_fifo(void)
+void rf_clear_fifo(void)
 {
 	rf_write_reg(FLUSH_TX, 0);
 	rf_write_reg(FLUSH_RX, 0);
 }
 /* rf_set channel */
-static void RF_SetChannel( unsigned char Channel)
+void rf_set_channel( unsigned char Channel)
 {    
 	//CE_LOW;
 	rf_write_reg(W_REGISTER + RF_CH, Channel);
 }
 /* set address */
-static int rf_write_address(const unsigned char *pbuf)
+int rf_write_address(const unsigned char *pbuf)
 {
 	/* declares */
 	unsigned char data[5] = {0};
@@ -277,7 +282,7 @@ static unsigned char rf_tx( unsigned char *ucPayload,  unsigned char length)
 	return Status_Temp;
 }
 /* rf_tx_transmintdata */
-static void rf_tx_transmintdata( unsigned char *ucTXPayload,  unsigned char length)
+void rf_tx_transmintdata( unsigned char *ucTXPayload,  unsigned char length)
 {    
 	/* write data to txfifo */
 	rf_write_multiple(W_ACK_PAYLOAD, ucTXPayload, length);
@@ -398,7 +403,7 @@ static void rf_binding_delay(unsigned int t)
 	while(t--);
 }
 /* rf check sum */
-static unsigned char rf_checksum(unsigned char *pbuf,unsigned char len)
+unsigned char rf_checksum(unsigned char *pbuf,unsigned char len)
 {
 	/* check sum */
 	unsigned char checksum = 0;
@@ -434,7 +439,7 @@ static int rf_binding(void)
 	/* set rf to default freq and channel */
 	rf_write_address((unsigned char *)tx_addr_def);
 	/* default channel */
-	RF_SetChannel(RF_BINDONG_CH);
+	rf_set_channel(RF_BINDONG_CH);
 	/* set the rf new address */
 	s_rf_link.rf_new_address[2] = addr_create >> 8;
 	s_rf_link.rf_new_address[3] = addr_create & 0xff; 

@@ -30,9 +30,22 @@ static struct file * xn297_fopen (FAR struct file *filp);
 static unsigned char spi2_wr_byte( unsigned char WriteByte );
 static void rf_write_reg( unsigned char reg,  unsigned char wdata);
 static unsigned char rf_read_reg( unsigned char reg );
-static void rf_write_multiple( unsigned char reg,const unsigned char *pBuf, unsigned char length);
-static void rf_read_multiple( unsigned char reg, unsigned char *pBuf,  unsigned char length);
 static int rf_init(void);
+static int config_default(void);
+static int rf_binding(void);
+void rf_set_tx(void);
+void rf_set_rx(void);
+unsigned char rf_get_statue(void);
+void rf_clear_status(void);
+void rf_clear_fifo(void);
+void rf_set_channel( unsigned char Channel);
+int rf_write_address(const unsigned char *pbuf);
+unsigned char rf_checksum(unsigned char *pbuf,unsigned char len);
+void rf_tx_transmintdata( unsigned char *ucTXPayload,  unsigned char length);
+void rf_write_multiple( unsigned char reg, const unsigned char *pBuf, unsigned char length);
+void rf_read_multiple( unsigned char reg, unsigned char *pBuf,  unsigned char length);
+void rf_link_timer(void);
+void rf_link_function(void);
 /* port init */
 #define  SPI2_NSS_HIG()   (gpio_bit_set(GPIOA,GPIO_PIN_15))
 #define  SPI2_NSS_LOW()   (gpio_bit_reset(GPIOA,GPIO_PIN_15))
@@ -253,6 +266,28 @@ typedef struct LINK_STRU
 	unsigned char          remoter_version[3];             //遥控版本号
 	unsigned short         plane_function_flag;            //飞机功能标志位
 }link_stru;
+/* enable */
+enum e_bit
+{
+    BIT0    = 0X01,
+    BIT1    = 0X02,
+    BIT2    = 0X04,
+    BIT3    = 0X08,
+    BIT4    = 0X10,
+    BIT5    = 0X20,
+    BIT6    = 0X40,
+    BIT7    = 0X80,   
+    BIT8    = 0X0100,
+    BIT9    = 0X0200,
+    BIT10    = 0X0400,
+    BIT11    = 0X0800,
+    BIT12    = 0X1000,
+    BIT13    = 0X2000,
+    BIT14    = 0X4000,
+    BIT15    = 0X8000,  
+};
+extern link_stru s_rf_link;
+
 /*------------------------------------------------------------------*/
 
 #endif

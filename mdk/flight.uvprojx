@@ -647,6 +647,11 @@
               <FileType>1</FileType>
               <FilePath>..\driver\xn297\xn297l_basic.c</FilePath>
             </File>
+            <File>
+              <FileName>xn297l_link.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\xn297\xn297l_link.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
