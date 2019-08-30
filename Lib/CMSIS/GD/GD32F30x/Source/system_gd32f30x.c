@@ -132,6 +132,12 @@ void SystemInit (void)
 
     /* configure the system clock source, PLL Multiplier, AHB/APBx prescalers and Flash settings */
     system_clock_config();
+		/* enable irq and disable systick */
+    __enable_irq();
+		/* enable fault irq */
+    __enable_fault_irq();
+		/* disable systick */
+    SysTick->CTRL = 0x00000000;		
 }
 /*!
     \brief      configure the system clock

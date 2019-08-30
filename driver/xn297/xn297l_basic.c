@@ -29,9 +29,6 @@
 #include "string.h"
 /* some defines */
 link_stru s_rf_link;
-
-int config_default(void);
-
 /* USER CODE BEGIN Includes */
 FS_INODE_REGISTER("xn297.d",xn297,xn297_heap_init,0);
 /* defined functions */
@@ -51,20 +48,18 @@ static int xn297_heap_init(void)
 	/* return xn297 result */
 	return rf_init();
 }
-
-int rf_binding(void);
-
-int config_default(void)
+/* default config */
+static int config_default(void)
 {
-	 if( rf_binding() == FS_OK )
-	 {
+	if( rf_binding() == FS_OK )
+	{
 		/* delete init thread and create a read data thread */
 		shell_create_dynamic("rf_link_timer",rf_link_timer,0);	//1ms
-  	shell_create_dynamic("rf_link_function",rf_link_function,0);	//4ms 
-	 }
+		shell_create_dynamic("rf_link_function",rf_link_function,0);	//4ms 
+	}
+  /* reutrn OK */
+	return FS_OK;
 }
-
-
 /* file & driver 's interface */
 static struct file * xn297_fopen (FAR struct file *filp)
 {
@@ -258,6 +253,7 @@ int rf_write_address(const unsigned char *pbuf)
 	return memcmp(tx_addr_def,data,sizeof(tx_addr_def)) ? FS_ERR : FS_OK;	
 	/* end of file */
 }
+#if 0
 /* rf_set_power */
 static void rf_set_power(unsigned char rf_power)
 {    
@@ -281,6 +277,7 @@ static unsigned char rf_tx( unsigned char *ucPayload,  unsigned char length)
 	/* return */
 	return Status_Temp;
 }
+#endif
 /* rf_tx_transmintdata */
 void rf_tx_transmintdata( unsigned char *ucTXPayload,  unsigned char length)
 {    
@@ -290,6 +287,7 @@ void rf_tx_transmintdata( unsigned char *ucTXPayload,  unsigned char length)
 	CE_HIGH;    
 	/* end of func */
 }
+#if 0
 /* read data from fifo */
 static unsigned char rf_dump_rxd( unsigned char *ucPayload,  unsigned char length)
 {
@@ -310,6 +308,7 @@ static unsigned char rf_dump_rxd( unsigned char *ucPayload,  unsigned char lengt
   /* return length */
 	return length;
 }
+#endif
 /* static */
 static int rf_init(void)
 {

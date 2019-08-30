@@ -24,7 +24,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "fs.h"
 #include "state.h"
-
+/* func */
+static int rf_binding(void);
 static int xn297_heap_init(void);
 static struct file * xn297_fopen (FAR struct file *filp);
 static unsigned char spi2_wr_byte( unsigned char WriteByte );

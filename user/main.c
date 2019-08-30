@@ -29,6 +29,7 @@
 #include "fs.h"
 /* USER CODE END Includes */
 #include "irom.h"
+#include "bl.h"
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 const unsigned int __FS_version[3] = {0xeabc2547,FC_SW_VERSION_ALONE,0x3526ec88};

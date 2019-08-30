@@ -46,6 +46,7 @@ int user_read_battery_voltage(power_user_s * power);
 int user_read_sbus(rcs_user_s * rcs);
 int user_load_param(flash_block_addr block,void * src,unsigned int len);
 int user_save_param(flash_block_addr block,const void * src,unsigned int len);
+int user_flash_ioctrl(int cmd, unsigned long arg,void *pri_data);
 
 /* end of files */
 #endif

@@ -269,6 +269,19 @@ int user_save_param(flash_block_addr block,const void * src,unsigned int len)
 	/* return */
 	return ret;
 }
+/* int user read param */
+int user_flash_ioctrl(int cmd, unsigned long arg,void *pri_data)
+{
+  /* open adc ok ? */
+	if( flash == NULL )
+	{
+		return FS_ERR;// oh on . we got nothing
+	}	
+	/* read flash */
+	int ret = fs_ioctl(flash,cmd,arg,pri_data);
+	/* return */
+	return ret;
+}
 /* end of file */
 
 

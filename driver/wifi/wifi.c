@@ -21,6 +21,7 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
+
 #include "fs.h"
 #include "f_shell.h"
 #include "fs_config.h"
@@ -29,6 +30,7 @@
 #include "f_ops.h"
 #include "f_drv.h"
 #include "state.h"
+#include "wifi_link.h"
 /* file interface */
 struct file * wifi_usart3 = NULL;
 /* wifi reciver type */
@@ -54,7 +56,7 @@ static int wifi_heap_init(void)
 	/* heap */
 
 	/* add your own code here */
-  wifi.i_flags = __FS_IS_INODE_OK|__FS_IS_INODE_INIT|__FS_IS_INODE_NODATA;
+    wifi.i_flags = __FS_IS_INODE_OK|__FS_IS_INODE_INIT|__FS_IS_INODE_NODATA; 
 	/* ------end of file------ */
 	return FS_OK;
 }
@@ -82,6 +84,9 @@ static int wifi_default_config(void)
 	/* init */
 	fs_ioctl(wifi_usart3,0,sizeof(msg),&msg);	
 	/* create a thread here */
+    
+    wifi_link_init();
+    
 	shell_create_dynamic("wifi_send_thread",wifi_send_thread,1);//4ms
 	shell_create_dynamic("wifi_receive_thread",wifi_receive_thread,1);//4ms
 	/*return*/
