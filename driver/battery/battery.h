@@ -31,6 +31,7 @@ static int bat_default_config(void);
 static unsigned int bat_fread(FAR struct file *filp, FAR void * buffer, unsigned int buflen);
 static struct file * bat_fopen (FAR struct file *filp);
 static int bat_ioctrl(FAR struct file *filp, int cmd, unsigned long arg,void *pri_data);
+void battery_thread(void);
 
 #endif
 
