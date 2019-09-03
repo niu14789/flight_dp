@@ -17,13 +17,15 @@
   ******************************************************************************
 	* BEEP TIM3 CHANNEL1 PWM Gerente
 	* common is TIM4 CH3 and CH4
-  */
+  */ 
 /* USER CODE END Header */
 #ifndef __XN297_H__
 #define __XN297_H__
 /* Includes ------------------------------------------------------------------*/
 #include "fs.h"
 #include "state.h"
+#include "stdbool.h"
+#include "stdint.h"
 /* func */
 static int rf_binding(void);
 static int xn297_heap_init(void);
@@ -229,6 +231,8 @@ typedef struct REMOTE_PACKET_STRU
 	//unsigned char     checksum;    
 }remote_packet_stru;
 #pragma pack ()
+
+extern remote_packet_stru remote_packet;
 /* enum4 */
 enum e_rf_rx_buffer_index 
 {
@@ -268,28 +272,44 @@ typedef struct LINK_STRU
 	unsigned short         plane_function_flag;            //飞机功能标志位
 }link_stru;
 /* enable */
-enum e_bit
-{
-    BIT0    = 0X01,
-    BIT1    = 0X02,
-    BIT2    = 0X04,
-    BIT3    = 0X08,
-    BIT4    = 0X10,
-    BIT5    = 0X20,
-    BIT6    = 0X40,
-    BIT7    = 0X80,   
-    BIT8    = 0X0100,
-    BIT9    = 0X0200,
-    BIT10    = 0X0400,
-    BIT11    = 0X0800,
-    BIT12    = 0X1000,
-    BIT13    = 0X2000,
-    BIT14    = 0X4000,
-    BIT15    = 0X8000,  
-};
+//enum e_bit
+//{
+//    BIT0    = 0X01,
+//    BIT1    = 0X02,
+//    BIT2    = 0X04,
+//    BIT3    = 0X08,
+//    BIT4    = 0X10,
+//    BIT5    = 0X20,
+//    BIT6    = 0X40,
+//    BIT7    = 0X80,   
+//    BIT8    = 0X0100,
+//    BIT9    = 0X0200,
+//    BIT10    = 0X0400,
+//    BIT11    = 0X0800,
+//    BIT12    = 0X1000,
+//    BIT13    = 0X2000,
+//    BIT14    = 0X4000,
+//    BIT15    = 0X8000,  
+//};
 extern link_stru s_rf_link;
 
-/*------------------------------------------------------------------*/
+
+//保存飞行限制设置数据
+void rf_id_store(void);
+bool rf_id_read(void);
+
+/*------------------------------------------------------------------*/ 
+//获取2.4G控制信息
+uint8_t get_remote_mode_function_control(void);
+void clear_remote_mode_function_control(void);
+uint8_t get_remote_return_home_function_control(void);
+void clear_remote_return_home_function_control(void);
+uint8_t get_remote_photo_function_control(void);
+void clear_remote_photo_function_control(void);
+uint8_t get_remote_record_function_control(void);
+void clear_remote_record_function_control(void);
+uint8_t get_remote_rise_land_function_control(void);
+void clear_remote_rise_land_function_control(void);
 
 #endif
 

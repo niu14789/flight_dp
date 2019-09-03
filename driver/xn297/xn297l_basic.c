@@ -27,6 +27,10 @@
 #include "state.h"
 #include "gd32f30x.h"
 #include "string.h"
+
+#include "wifi_link.h"
+#include "common.h"
+
 /* some defines */
 link_stru s_rf_link;
 /* USER CODE BEGIN Includes */
@@ -423,6 +427,7 @@ static int rf_receive_data(unsigned char *pbuf,unsigned char len)
 	return (rf_checksum( pbuf ,len - 1 ) == pbuf[len - 1]) ? FS_OK : FS_ERR;
 	/* end of func */
 }
+uint32_t    binding_timerout_counter = 0;
 /* rf binding thread */
 static int rf_binding(void)
 {    
@@ -431,6 +436,7 @@ static int rf_binding(void)
 	unsigned char   binding_success_flag = 0;    
 	unsigned char   u8_temp;
 	unsigned int    exit_binding_counter = 0;
+    
 	/* default addr */
 	const unsigned char tx_addr_def[] = DEFAULT_TX_ADDE;
 	/* create a random data as a seek*/
@@ -447,6 +453,17 @@ static int rf_binding(void)
 	/* initloop */
 	while( binding_success_flag == 0 )
 	{       
+        binding_timerout_counter++;
+        if (binding_timerout_counter > 30*400)        //设计30S
+        {
+            break;
+        }
+        //5秒未接收成功退出对码状态
+        if ((0 == binding_step) && (binding_timerout_counter >= 5*400))       //设计5S
+        { 
+            break;
+        }  
+        
 		/* default cmd case */
 		switch (binding_step)
 		{        
@@ -461,7 +478,7 @@ static int rf_binding(void)
 					rf_read_multiple(R_RX_PAYLOAD,s_rf_link.rx_buffer, PAYLOAD_WIDTH);            
 					/* copy data */
 					memcpy(&s_rf_link.tx_buffer[1],&s_rf_link.rf_new_address[0],5);
-          /* create buffer */
+                    /* create buffer */
 					s_rf_link.tx_buffer[0] = RF_LINK_BUFFER_HEAD;
 					s_rf_link.tx_buffer[6] = binding_step | 0x10;
 					/* calibate the txbuffer sum */
@@ -521,11 +538,12 @@ static int rf_binding(void)
 				}      
 				else
 				{
+                    rf_binding_delay(10*8000);
 					/* can not read data */
 					if( binding_step == 2 )
 					{   
-            /* over time */						
-						if( exit_binding_counter++ > 2000 )
+                        /* over time */						
+						if( exit_binding_counter++ > 300 )
 						{
 							/* init again */
 							rf_init();
@@ -547,14 +565,104 @@ static int rf_binding(void)
 	/* bindling ok */
 	if( binding_success_flag == 1 )
 	{
-//			//rf_id_store();
+			rf_id_store();
 //			rf_write_address(s_rf_link.rf_new_address);
 		return FS_OK;
 	}
 	/* error */
-  return FS_ERR;
+    else
+    {
+        /* init again */
+		rf_init();
+        rf_id_read();
+        rf_write_address(s_rf_link.rf_new_address);
+        /* into rx mode */
+		rf_set_rx();
+        return FS_OK;
+    }
+//    return FS_ERR;    
 }
 
+
+//保存飞行限制设置数据
+void rf_id_store(void)
+{
+    user_load_param(FLASH_BLOCK0,&flash,FLASH_DATA_BUFFER_LEN);
+    
+    flash.rfID[0] = s_rf_link.rf_new_address[0];
+    flash.rfID[1] = s_rf_link.rf_new_address[1];
+    flash.rfID[2] = s_rf_link.rf_new_address[2];
+    flash.rfID[3] = s_rf_link.rf_new_address[3];
+    flash.rfID[4] = s_rf_link.rf_new_address[4];
+    
+    flash.rfID[5] = get_u8data_checksum((uint8_t *)&flash.rfID,5);
+    
+    flash.remote_version[0] = s_rf_link.remoter_version[0];
+    flash.remote_version[1] = s_rf_link.remoter_version[1];
+    flash.remote_version[2] = s_rf_link.remoter_version[2]; 
+    
+    flash.store_flag = 0x55aa;
+    flash.check_sum = get_u8data_checksum((uint8_t *)&flash,FLASH_DATA_BUFFER_LEN-1);
+    user_save_param(FLASH_BLOCK0, &flash, FLASH_DATA_BUFFER_LEN);
+    user_save_param(FLASH_BLOCK1, &flash, FLASH_DATA_BUFFER_LEN);
+}
+
+bool rf_id_read(void)
+{
+    uint8_t checksum;
+    
+    user_load_param(FLASH_BLOCK0,&flash,FLASH_DATA_BUFFER_LEN);
+    checksum = get_u8data_checksum((uint8_t *)&flash.rfID,5);   
+    
+    if ((checksum == flash.rfID[5]) && (flash.store_flag == 0x55aa))
+    {
+        s_rf_link.rf_new_address[0] = flash.rfID[0];
+        s_rf_link.rf_new_address[1] = flash.rfID[1];
+        s_rf_link.rf_new_address[2] = flash.rfID[2];
+        s_rf_link.rf_new_address[3] = flash.rfID[3];
+        s_rf_link.rf_new_address[4] = flash.rfID[4];
+        
+        s_rf_link.remoter_version[0] = flash.remote_version[0];
+        s_rf_link.remoter_version[1] = flash.remote_version[1];
+        s_rf_link.remoter_version[2] = flash.remote_version[2];
+        return true;
+    }
+    else
+    {
+        user_load_param(FLASH_BLOCK1,&flash,FLASH_DATA_BUFFER_LEN);
+        checksum = get_u8data_checksum((uint8_t *)&flash.rfID,5);   
+        if ((checksum == flash.rfID[5]) && (flash.store_flag == 0x55aa))
+        {
+            s_rf_link.rf_new_address[0] = flash.rfID[0];
+            s_rf_link.rf_new_address[1] = flash.rfID[1];
+            s_rf_link.rf_new_address[2] = flash.rfID[2];
+            s_rf_link.rf_new_address[3] = flash.rfID[3];
+            s_rf_link.rf_new_address[4] = flash.rfID[4];
+            
+            s_rf_link.remoter_version[0] = flash.remote_version[0];
+            s_rf_link.remoter_version[1] = flash.remote_version[1];
+            s_rf_link.remoter_version[2] = flash.remote_version[2];
+            
+            rf_id_store();
+            return true;
+        }
+        else
+        {   
+            s_rf_link.rf_new_address[0] = 0xcc;
+            s_rf_link.rf_new_address[1] = 0xcc;
+            s_rf_link.rf_new_address[2] = 0xcc;
+            s_rf_link.rf_new_address[3] = 0xcc;
+            s_rf_link.rf_new_address[4] = 0xcc;
+            
+            s_rf_link.remoter_version[0] = 0xff;
+            s_rf_link.remoter_version[1] = 0xff;
+            s_rf_link.remoter_version[2] = 0xff;
+            
+            rf_id_store();
+            return false;
+        }        
+    }        
+}
 
 
 

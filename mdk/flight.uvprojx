@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\Lib\CMSIS\GD\GD32F30x\Include;..\Lib\CMSIS;..\Lib\GD32F30x_standard_peripheral\Include;..\Utilities;..\;C:\Keil_v5\ARM\Pack\ARM\CMSIS\4.2.0\CMSIS\Include;..\sensor\Dps310;..\sensor\Gps;..\sensor\ICM20600;..\sensor\Calibration;..\sensor\ST480;..\driver\SPI;..\driver\flash;..\driver\Parameter;..\driver\Usart;..\user\TEST;..\link;..\driver\PWM;..\driver\led;..\driver\adc;..\driver\sbus;..\Lib\GD32F30x_usbd_driver\Include;..\driver\CdcAcm;..\driver\I2C;..\common\file_system;..\driver\icm;..\driver\common;..\driver\irom;..\user</IncludePath>
+              <IncludePath>..\Lib\CMSIS\GD\GD32F30x\Include;..\Lib\CMSIS;..\Lib\GD32F30x_standard_peripheral\Include;..\Utilities;..\;C:\Keil_v5\ARM\Pack\ARM\CMSIS\4.2.0\CMSIS\Include;..\sensor\Dps310;..\sensor\Gps;..\sensor\ICM20600;..\sensor\Calibration;..\sensor\ST480;..\driver\SPI;..\driver\flash;..\driver\Parameter;..\driver\Usart;..\user\TEST;..\link;..\driver\PWM;..\driver\led;..\driver\adc;..\driver\sbus;..\Lib\GD32F30x_usbd_driver\Include;..\driver\CdcAcm;..\driver\I2C;..\common\file_system;..\driver\icm;..\driver\common;..\driver\irom;..\user;..\driver\wifi;..\driver\xn297</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

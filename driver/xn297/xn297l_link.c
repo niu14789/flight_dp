@@ -27,14 +27,18 @@
 #include "state.h"
 #include "gd32f30x.h"
 #include "string.h"
+#include "wifi_link.h"
 
+#define PLANE_FUNC  1
 
 remote_packet_stru remote_packet;
 uint8_t by_remote_function_status_backup;
 __IO uint8_t by_remote_function_status_now;
 
 uint8_t get_remote_mode_function_control(void) { return (by_remote_function_status_now & MODE_FUNCTION_BIT); }
+void clear_remote_mode_function_control(void) { by_remote_function_status_now &= ~MODE_FUNCTION_BIT; }
 uint8_t get_remote_return_home_function_control(void) { return (by_remote_function_status_now & RETURN_HOME_FUNCTION_BIT); }
+void clear_remote_return_home_function_control(void) { by_remote_function_status_now &= ~RETURN_HOME_FUNCTION_BIT; }
 uint8_t get_remote_photo_function_control(void) { return (by_remote_function_status_now & PHOTO_FUNCTION_BIT); }
 void clear_remote_photo_function_control(void) { by_remote_function_status_now &= ~PHOTO_FUNCTION_BIT; }
 uint8_t get_remote_record_function_control(void) { return (by_remote_function_status_now & VIDEO_FUNCTION_BIT); }
@@ -159,11 +163,12 @@ void plane_function_flag_update(void)
     }
 }
 #endif
+extern power_user_s    bat_user;   /* user battery voltage */
 void rf_normal_data_packet(void)
 {
     uint16_t u16_temp;
 #if PLANE_FUNC	
-    u16_temp = (uint16_t)(get_battery_voltage()*100);
+    u16_temp = (uint16_t)(bat_user.bat_voltage * 100);
     plane_function_flag_update();
 #else
 	  u16_temp = 16000;//16V
@@ -226,14 +231,15 @@ void remote_function_control(void)
  //       }
         //返航功能控制
         if (get_remote_return_home_function_control())
-        {            
-            //更新飞机返航状态  
-            update_plane_status_now(PLANE_RETURN_HOME_MODE_STATUS,STATUS_ON);            
+        {       
+            clear_remote_return_home_function_control();
+            //更新飞机返航状态 
+            if (STATUS_OFF == get_plane_status_now(PLANE_RETURN_HOME_MODE_STATUS))             
+                update_plane_status_now(PLANE_RETURN_HOME_MODE_STATUS,STATUS_ON); 
+            else
+                update_plane_status_now(PLANE_RETURN_HOME_MODE_STATUS,STATUS_OFF);
         }
-        else
-        {
-			update_plane_status_now(PLANE_RETURN_HOME_MODE_STATUS,STATUS_OFF);            
-        }
+        
         //起飞降落
         if (get_remote_rise_land_function_control())
         {
@@ -241,7 +247,7 @@ void remote_function_control(void)
             //飞机出于起飞状态，置飞机降落状态
             if (STATUS_ON == get_plane_status_now(PLANE_FLYING_STATUS))
             {
-                update_plane_status_now(PLANE_LANDING_STATUS,STATUS_ON);
+                update_plane_status_now(PLANE_LANDING_STATUS,STATUS_OFF);
             }
 			else
 			{				
@@ -251,12 +257,13 @@ void remote_function_control(void)
 		//模式功能
 		if (get_remote_mode_function_control())
 		{
+            clear_remote_mode_function_control();
+            
 			//更新飞机模式状态
-			update_plane_status_now(PLANE_SPEED_MODE_STATUS,STATUS_ON);
-		}
-		else
-		{
-			update_plane_status_now(PLANE_SPEED_MODE_STATUS,STATUS_OFF);
+            if (STATUS_OFF == get_plane_status_now(PLANE_SPEED_MODE_STATUS))
+                update_plane_status_now(PLANE_SPEED_MODE_STATUS,STATUS_ON);
+            else
+                update_plane_status_now(PLANE_SPEED_MODE_STATUS,STATUS_OFF);		
 		}
 		//camera ev+
 		if (remote_packet.camera_zoom > 0xd50)
@@ -327,7 +334,7 @@ void rf_relink_detect(void)
 	}    
 }
 
-#if PLANE_FUNC
+#if 0
 //连接通讯功能
 uint8_t rev_status;
 
@@ -408,7 +415,7 @@ void rf_link_function(void)
         s_rf_link.link_step = RF_STEP_NULL;
     }  
 }
-
+#if 0
 //RF 新地址根据ADC值和timer0数值共同产生
 uint16_t rf_new_address_generate(void)
 {
@@ -417,7 +424,7 @@ uint16_t rf_new_address_generate(void)
     u16_temp ^= (uint16_t)(SysTick->VAL);
     return u16_temp;
 }
-#if 0
+
 //RF 对码
 void rf_binding(void)
 {    
@@ -591,7 +598,6 @@ uint8_t get_u8data_checksum(uint8_t *pbuf,uint8_t len)
     }
     return checksum;
 }
-
 //读取RF 接收数据并校验
 bool read_rf_receive_data(uint8_t *pbuf,uint8_t len)
 {
@@ -604,59 +610,6 @@ bool read_rf_receive_data(uint8_t *pbuf,uint8_t len)
     {
         return false;
     }
-}
-
-void rf_id_store(void)
-{  
-    PARAMETER_SAVE *poParam;    
-    
-    poParam = LoadParameter();
-    poParam->abyRfID[0] = s_rf_link.rf_new_address[0];
-    poParam->abyRfID[1] = s_rf_link.rf_new_address[1];
-    poParam->abyRfID[2] = s_rf_link.rf_new_address[2];
-    poParam->abyRfID[3] = s_rf_link.rf_new_address[3];
-    poParam->abyRfID[4] = s_rf_link.rf_new_address[4];    
-    poParam->abyRfID[5] = get_u8data_checksum(s_rf_link.rf_new_address,5);   
- 
-    poParam->abyRemoterVersion[0] = s_rf_link.remoter_version[0];
-    poParam->abyRemoterVersion[1] = s_rf_link.remoter_version[1];
-    poParam->abyRemoterVersion[2] = s_rf_link.remoter_version[2];
-    poParam->abyRemoterVersion[3] = get_u8data_checksum(s_rf_link.remoter_version,3);
-    SaveParameter();
-}
-bool rf_id_read(void)
-{    
-    uint8_t i;    
-    PARAMETER_SAVE *poParam;
-    
-    poParam = LoadParameter();
-    
-    if(get_u8data_checksum(poParam->abyRfID,5) != poParam->abyRfID[5])
-    {
-        return false;
-    }
-    for (i = 0;i<6;i++)
-    {
-        if(poParam->abyRfID[i] != 0xff)
-        {            
-            break;
-        }
-    }
-    if (i >= 6)
-    {
-        return false;
-    }   
-    s_rf_link.rf_new_address[0] = poParam->abyRfID[0];
-    s_rf_link.rf_new_address[1] = poParam->abyRfID[1];
-    s_rf_link.rf_new_address[2] = poParam->abyRfID[2];
-    s_rf_link.rf_new_address[3] = poParam->abyRfID[3];
-    s_rf_link.rf_new_address[4] = poParam->abyRfID[4];
-    
-    s_rf_link.remoter_version[0] = poParam->abyRemoterVersion[0];
-    s_rf_link.remoter_version[1] = poParam->abyRemoterVersion[1];
-    s_rf_link.remoter_version[2] = poParam->abyRemoterVersion[2];
-    
-    return true;
 }
 #endif
 

@@ -17,7 +17,7 @@
 enum e_command
 {
     CMD0    = 0,
-    CMD1    = 1,
+    CMD1    = 1,  
     CMD2    = 2,
     CMD3    = 3,
     CMD4    = 4,
@@ -344,23 +344,42 @@ typedef struct
     uint8_t     camera_info;                //相机信息
 }wifi_cmd1_packet_backup_stru;
 
+uint16_t get_phone_control_follow_mode(void);     //0xffff 开启跟随，0x0000 未开启
 uint8_t get_phone_control_speed_mode(void); //大小档模式，0/1/2，低中高
-uint8_t get_phone_control_roll_mode(void);  //翻滚模式，1:开启，0：关闭
-uint8_t get_phone_control_return_home_mode(void);   //返航模式，1:开启，0：关闭
-uint8_t get_phone_control_headless_mode(void);    //无头模式，1:开启，0：关闭
-uint8_t get_phone_control_scram_mode(void);     //急停模式，1:开启，0：关闭
-uint8_t get_phone_control_rising_landing(void);  //一键启动/着陆，1:开启，0：关闭
+uint8_t get_phone_control_roll_mode(void);  //翻滚模式，1:有效
+void clear_phone_control_roll_mode(void);
+uint8_t get_phone_control_return_home_mode(void);   //返航模式，1:有效
+void clear_phone_control_return_home_mode(void);
+uint8_t get_phone_control_headless_mode(void);    //无头模式，1:有效
+void clear_phone_control_headless_mode(void);
+uint8_t get_phone_control_scram_mode(void);     //急停模式，1:有效
+void clear_phone_control_scram_mode(void);
+uint8_t get_phone_control_rising_landing(void);  //一键启动/着陆，1:有效
+void clear_phone_control_rising_landing(void);
 //uint8_t get_phone_control_landing(void);
-uint8_t get_phone_control_compass_calibrate(void); //地磁校准，1:开启，0：关闭
-uint8_t get_phone_control_level_calibrate(void);//水平校准，1:开启，0：关闭
-uint8_t get_phone_control_lock_info(void);//解锁，1:开启，0：关闭
-uint8_t get_phone_control_hot_spot_around(void);//热点环绕，1:开启，0：关闭
-uint8_t get_phone_control_point_fly(void);//指点飞行，1:开启，0：关闭
-uint8_t get_phone_control_altitude_info(void);  //定高标志，1:开启，0：关闭
-uint8_t get_phone_control_one_key_calibrate_flag(void); //一键校准，1:开启，0：关闭
-uint8_t get_phone_control_camera_up_left(void); //摄像头上升或向左标志，1:开启，0：关闭
-uint8_t get_phone_control_camera_down_right(void); //摄像头下降或向右标志，1:开启，0：关闭
+uint8_t get_phone_control_compass_calibrate(void); //地磁校准，1:有效
+void clear_phone_control_compass_calibrate(void);
+uint8_t get_phone_control_level_calibrate(void);//水平校准，1:有效
+void clear_phone_control_level_calibrate(void);
+uint8_t get_phone_control_lock_info(void);//解锁，1:有效
+void clear_phone_control_lock_info(void);
+uint8_t get_phone_control_hot_spot_around(void);//热点环绕，1:有效
+void clear_phone_control_circle(void);
+uint8_t get_phone_control_point_fly(void);//指点飞行，1:有效
+void clear_phone_control_point_fly(void);
+uint8_t get_phone_control_altitude_info(void);  //定高标志，1:有效
+void clear_phone_control_altitude_info(void);
+uint8_t get_phone_control_one_key_calibrate_flag(void); //一键校准，1:有效
+void clear_phone_control_one_key_calibrate_flag(void);
+uint8_t get_phone_control_camera_up_left(void); //摄像头上升或向左标志，1:有效
+uint8_t get_phone_control_camera_down_right(void); //摄像头下降或向右标志，1:有效
 uint8_t get_phone_control_led(void); //灯控制位，初始位0，再按为1，再按为2，0/1/2 循环
+//获取摇杆值
+uint16_t get_throttle_value(void);  
+uint16_t get_aileron_value(void);
+uint16_t get_elevator_value(void);
+uint16_t get_rudder_value(void);
+uint16_t get_yuntai_value(void);
 
 //灯 云台控制
 typedef struct 
@@ -602,6 +621,27 @@ void update_plane_status_now(plane_status_def plane_function,status_def status);
 
 //获取飞机各功能的当前状态
 status_def get_plane_status_now(plane_status_def plane_function);
+
+
+
+//
+// 获取8bit校验和
+uint8_t get_u8data_checksum(uint8_t *pbuf,uint8_t len);
+
+#pragma pack (1) /*指定按2字节对齐*/
+typedef struct FLASH_STRU
+{   
+    uint8_t     updata_flag[4];
+    uint8_t     rfID[8];
+    uint8_t     remote_version[4];
+    uint8_t     FlyLimitSettingData[8];
+    uint16_t    store_flag;
+    uint8_t     check_sum;      //位置不能动，必须放在结构最后面
+}FLASH_DEF;
+#pragma pack () /*取消指定对齐，恢复缺省对齐*/
+extern FLASH_DEF flash;
+
+#define FLASH_DATA_BUFFER_LEN  sizeof(flash) 
 
 #endif
 

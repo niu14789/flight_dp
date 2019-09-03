@@ -171,6 +171,7 @@ int user_set_led(unsigned short mode )
 		return FS_OK;// oh on . we got nothing
 	}	
 	/* ok . let's roll it */
+	fs_ioctl(led,0,mode,0);
 	// rev
 	return FS_OK;	
 }

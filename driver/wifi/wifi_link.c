@@ -21,7 +21,7 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "gd32f30x.h"
+#include "gd32f30x.h" 
 #include "fs.h"
 #include "f_shell.h"
 #include "fs_config.h"
@@ -32,6 +32,7 @@
 #include "state.h"
 #include "wifi_link.h"
 #include "common.h"
+#include "xn297.h"
 
 uint32_t g_dw_plane_status;      //飞机状态
 
@@ -95,6 +96,7 @@ void wifi_link_init(void)
 /* some define */
 static unsigned char wifi_receive_buffer[512];
 static unsigned char wifi_parse_buffer[256];
+#define APP_STICK_DEFAULT_VALUE 125
 /*-------------*/
 void wifi_link_data_receive(void)
 {
@@ -111,6 +113,12 @@ void wifi_link_data_receive(void)
     if (m_plane_function_control_info.w_lose_control_timer >= 2000/4)
     {
         set_plane_wifi_lose_control_flag();
+        //失控时控制值恢复默认值
+        wifi_cmd1_packet.throttle = APP_STICK_DEFAULT_VALUE;
+        wifi_cmd1_packet.aileron = APP_STICK_DEFAULT_VALUE;
+        wifi_cmd1_packet.elevator = APP_STICK_DEFAULT_VALUE;
+        wifi_cmd1_packet.rudder = APP_STICK_DEFAULT_VALUE;
+        wifi_cmd1_packet.gimbal_pitch = APP_STICK_DEFAULT_VALUE;
     }    
     
 	/* read data from usart3 */
@@ -170,8 +178,7 @@ void wifi_link_data_receive(void)
 						if( payload_cnt >= read_data_len )
 						{
 #if 1
-                            wifi_data_packet_decode(wifi_parse_buffer);     
-                            plane_function_status_update_to_wifi();
+                            wifi_data_packet_decode(wifi_parse_buffer); 
 #endif							
 							steps = 0;
 						}
@@ -189,6 +196,7 @@ void wifi_link_data_receive(void)
 			/* end of this */
 		}
 	}
+    plane_function_status_update_to_wifi();
 }
 
 //static bool f_cmd2_send_flag = false;
@@ -364,13 +372,17 @@ void set_plane_cmd2_remote_choice_repeater(void) { plane_cmd2_packet.plane_statu
 
 
 //wifi_cmd0_packet
-uint16_t get_phone_control_follow_mode(void) { return wifi_cmd0_packet.follow_me_flag;}
+uint16_t get_phone_control_follow_mode(void) { return wifi_cmd0_packet.follow_me_flag;}     //0xffff 开启跟随，0x0000 未开启
 //wifi_cmd1_packet.control_info 操作
 uint8_t get_phone_control_speed_mode(void) { return (m_plane_function_control_info.by_control_info & 0x03); }
 uint8_t get_phone_control_roll_mode(void) { return (m_plane_function_control_info.by_control_info & BIT2); }
+void clear_phone_control_roll_mode(void) { m_plane_function_control_info.by_control_info &= ~BIT2; }
 uint8_t get_phone_control_return_home_mode(void) { return (m_plane_function_control_info.by_control_info & BIT3); }
+void clear_phone_control_return_home_mode(void) { m_plane_function_control_info.by_control_info &= ~BIT3; }
 uint8_t get_phone_control_headless_mode(void) { return (m_plane_function_control_info.by_control_info & BIT4); }
+void clear_phone_control_headless_mode(void) { m_plane_function_control_info.by_control_info &= ~BIT4; }
 uint8_t get_phone_control_scram_mode(void) { return (m_plane_function_control_info.by_control_info & BIT5); }
+void clear_phone_control_scram_mode(void) { m_plane_function_control_info.by_control_info &= ~BIT5; }
 uint8_t get_phone_control_rising_landing(void) { return (m_plane_function_control_info.by_control_info & BIT6); }
 void clear_phone_control_rising_landing(void) { m_plane_function_control_info.by_control_info &= ~BIT6; }
 
@@ -381,13 +393,74 @@ uint8_t get_phone_control_led(void) { return (wifi_cmd1_packet.led_control & (BI
 uint8_t get_phone_control_compass_calibrate(void) { return (m_plane_function_control_info.by_calibrate_info & BIT0); } //地磁校准，按下为1，再按为0 
 void clear_phone_control_compass_calibrate(void) { m_plane_function_control_info.by_calibrate_info &= ~BIT0; }
 uint8_t get_phone_control_level_calibrate(void) { return (m_plane_function_control_info.by_calibrate_info & BIT1); } //水平校准，按下为1，再按为0 
+void clear_phone_control_level_calibrate(void) { m_plane_function_control_info.by_calibrate_info &= ~BIT1; }
 uint8_t get_phone_control_lock_info(void) { return (m_plane_function_control_info.by_calibrate_info & BIT2); } //解锁，按下为1，再按为0 
+void clear_phone_control_lock_info(void) { m_plane_function_control_info.by_calibrate_info &= ~BIT2; }
 uint8_t get_phone_control_circle(void) { return (m_plane_function_control_info.by_calibrate_info & BIT3); } //热点环绕，按下为1，再按为0 
 void clear_phone_control_circle(void) { m_plane_function_control_info.by_calibrate_info &= ~BIT3; }
 uint8_t get_phone_control_point_fly(void) { return (m_plane_function_control_info.by_calibrate_info & BIT4); } //指点飞行，按下为1，再按为0
 void clear_phone_control_point_fly(void) { m_plane_function_control_info.by_calibrate_info &= ~BIT4; }
 uint8_t get_phone_control_one_key_calibrate_flag(void) { return (m_plane_function_control_info.by_calibrate_info & BIT5); }
+void clear_phone_control_one_key_calibrate_flag(void) { m_plane_function_control_info.by_calibrate_info &= ~BIT5; }
 uint8_t get_phone_control_altitude_info(void) { return (m_plane_function_control_info.by_calibrate_info & BIT6); }
+void clear_phone_control_altitude_info(void) { m_plane_function_control_info.by_calibrate_info &= ~BIT6; }
+
+uint16_t get_throttle_value(void)   
+{
+    if (s_rf_link.link_status == CONNECCTING)
+    {
+        return remote_packet.throttle;
+    }
+    else
+    {
+        return (1000 + wifi_cmd1_packet.throttle*4);
+    }
+}
+uint16_t get_aileron_value(void)   
+{
+    if (s_rf_link.link_status == CONNECCTING)
+    {
+        return remote_packet.aileron;
+    }
+    else
+    {
+        return (1000 + wifi_cmd1_packet.aileron*4);
+    }
+}
+uint16_t get_elevator_value(void)   
+{
+    if (s_rf_link.link_status == CONNECCTING)
+    {
+        return remote_packet.elevator;
+    }
+    else
+    {
+        return (1000 + wifi_cmd1_packet.elevator*4);
+    }
+}
+uint16_t get_rudder_value(void)   
+{
+    if (s_rf_link.link_status == CONNECCTING)
+    {
+        return remote_packet.rudder;
+    }
+    else
+    {
+        return (1000 + wifi_cmd1_packet.rudder*4);
+    }
+}
+uint16_t get_yuntai_value(void)   
+{
+    if (s_rf_link.link_status == CONNECCTING)
+    {
+        return remote_packet.yuntai;
+    }
+    else
+    {
+        return (1000 + wifi_cmd1_packet.gimbal_pitch*4);
+    }
+}
+
 //wifi_cmd1_packet.camera_info 操作
 uint8_t get_camera_photo_status(void)
 {
@@ -501,9 +574,9 @@ void plane_send_data_packet(uint8_t *pbuffer,uint8_t cmd)
             plane_cmd6_packet.plane_version_h = PLANE_VERSION_HIGH;
             plane_cmd6_packet.plane_version_m = PLANE_VERSION_MEDIAN;
             plane_cmd6_packet.plane_version_l = PLANE_VERSION_LOW;
-//            plane_cmd6_packet.remoter_version_h = poParam->abyRemoterVersion[0];
-//            plane_cmd6_packet.remoter_version_m = poParam->abyRemoterVersion[1];
-//            plane_cmd6_packet.remoter_version_l = poParam->abyRemoterVersion[2];
+            plane_cmd6_packet.remoter_version_h = flash.remote_version[0];
+            plane_cmd6_packet.remoter_version_m = flash.remote_version[1];
+            plane_cmd6_packet.remoter_version_l = flash.remote_version[2];
             plane_cmd6_packet.gimbal_version_h = 2;
             plane_cmd6_packet.gimbal_version_m = 1;
             plane_cmd6_packet.gimbal_version_l = 2;
@@ -622,7 +695,7 @@ void wifi_data_packet_decode(uint8_t *pbuffer)
             {
                 //如果升级飞控，发送升级响应完成后软件复位进入BootLoader程序  
 //                store_iap_start_flag();
-							erase_iap_id();
+                erase_iap_id();
 //                delay_ms(10);                
                 __set_FAULTMASK(0);
                 NVIC_SystemReset();
@@ -640,17 +713,8 @@ void wifi_data_packet_decode(uint8_t *pbuffer)
     }    
 }
 
-#pragma pack (1) /*指定按2字节对齐*/
-typedef struct FLASH_STRU
-{   
-    uint8_t     updata_flag[4];
-    uint8_t     FlyLimitSettingData[8];
-    uint16_t    store_flag;
-    uint8_t     check_sum;      //位置不能动，必须放在结构最后面
-}FLASH_DEF;
-#pragma pack () /*取消指定对齐，恢复缺省对齐*/
+
 FLASH_DEF flash;
-#define FLASH_DATA_BUFFER_LEN  sizeof(flash)
 
 #define IAP_START_FLAG      0X11223344
 //保存飞行限制设置数据
@@ -670,6 +734,8 @@ int erase_iap_id(void)
 //保存飞行限制设置数据
 void store_fly_limit_setting_data(void)
 {
+    user_load_param(FLASH_BLOCK0,&flash,FLASH_DATA_BUFFER_LEN);
+    
     flash.FlyLimitSettingData[0] = wifi_cmd3_packet.altitude_limit_setting;
     flash.FlyLimitSettingData[1] = wifi_cmd3_packet.distance_limit_setting;
     flash.FlyLimitSettingData[2] = wifi_cmd3_packet.return_altitude_setting;
@@ -678,6 +744,7 @@ void store_fly_limit_setting_data(void)
     flash.FlyLimitSettingData[5] = (wifi_cmd3_packet.circle_radius>>8) & 0x00ff;
     flash.FlyLimitSettingData[6] = wifi_cmd3_packet.circle_radius & 0x00ff;
     
+    flash.store_flag = 0x55aa;
     flash.check_sum = get_u8data_checksum((uint8_t *)&flash,FLASH_DATA_BUFFER_LEN-1);
     user_save_param(FLASH_BLOCK0, &flash, FLASH_DATA_BUFFER_LEN);
     user_save_param(FLASH_BLOCK1, &flash, FLASH_DATA_BUFFER_LEN);
@@ -716,16 +783,30 @@ bool read_fly_limit_setting_data(void)
             wifi_cmd3_packet.circle_radius = flash.FlyLimitSettingData[5]<<8;
             wifi_cmd3_packet.circle_radius |= flash.FlyLimitSettingData[6];            
             
-            user_save_param(FLASH_BLOCK0, &flash, FLASH_DATA_BUFFER_LEN);
+            store_fly_limit_setting_data();
             return true;
         }
         else
         {
-            memset(&flash,0,FLASH_DATA_BUFFER_LEN);
-            flash.store_flag = 0x55aa;
-            flash.check_sum = get_u8data_checksum((uint8_t *)&flash,FLASH_DATA_BUFFER_LEN-1);
-            user_save_param(FLASH_BLOCK0, &flash, FLASH_DATA_BUFFER_LEN);
-            user_save_param(FLASH_BLOCK1, &flash, FLASH_DATA_BUFFER_LEN);
+            wifi_cmd3_packet.altitude_limit_setting = 0;
+            wifi_cmd3_packet.distance_limit_setting = 0;
+            wifi_cmd3_packet.return_altitude_setting = 0;
+            wifi_cmd3_packet.green_hands_setting = 0;
+            wifi_cmd3_packet.stick_mode = 0;
+            wifi_cmd3_packet.circle_radius = 0;
+            
+            flash.rfID[0] = 0xcc;
+            flash.rfID[1] = 0xcc;
+            flash.rfID[2] = 0xcc;
+            flash.rfID[3] = 0xcc;
+            flash.rfID[4] = 0xcc;
+            flash.rfID[5] = get_u8data_checksum((uint8_t *)&flash.rfID,5);
+            
+            flash.remote_version[0] = 0xff;
+            flash.remote_version[1] = 0xff;
+            flash.remote_version[2] = 0xff;
+            
+            store_fly_limit_setting_data();
             return false;
         }
         
@@ -1157,11 +1238,11 @@ void plane_function_status_update_to_wifi(void)
     if (get_phone_control_compass_calibrate())
     {        
         w_testCouter++;
-        if (w_testCouter < 10000)
+        if (w_testCouter < 1000)
         {
             set_plane_cmd2_compass_horizontal_calibrate_status();
         }
-        else if (w_testCouter < 20000)
+        else if (w_testCouter < 2000)
         {
             clear_plane_cmd2_compass_horizontal_calibrate_status();
             set_plane_cmd2_compass_vertical_calibrate_status();
@@ -1242,18 +1323,18 @@ void plane_function_status_update_to_wifi(void)
 	//APP返航测试
 	if (get_phone_control_return_home_mode())
 	{
-		update_plane_status_now(PLANE_RETURN_HOME_MODE_STATUS, STATUS_ON);
-	}
-	else
-	{
-		update_plane_status_now(PLANE_RETURN_HOME_MODE_STATUS, STATUS_OFF);
-	}
+        clear_phone_control_return_home_mode();
+        if (STATUS_OFF == get_plane_status_now(PLANE_RETURN_HOME_MODE_STATUS))
+            update_plane_status_now(PLANE_RETURN_HOME_MODE_STATUS, STATUS_ON);
+        else
+            update_plane_status_now(PLANE_RETURN_HOME_MODE_STATUS, STATUS_OFF);
+	}	
 
 	//一键起飞
 	if (STATUS_ON == get_plane_status_now(PLANE_RISING_STATUS))
 	{
 		w_testCouter++;
-        if (w_testCouter < 10000)
+        if (w_testCouter < 1000)
         {
             set_plane_cmd2_rising_mode();
         }
@@ -1269,7 +1350,7 @@ void plane_function_status_update_to_wifi(void)
 	if (STATUS_ON == get_plane_status_now(PLANE_LANDING_STATUS))
 	{
 		w_testCouter++;
-        if (w_testCouter < 10000)
+        if (w_testCouter < 1000)
         {
             set_plane_cmd2_landing_mode();
         }
