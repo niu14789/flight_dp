@@ -27,14 +27,15 @@
 #include "state.h"
 #include "gd32f30x.h"
 #include "string.h"
-
+#include "f_ops.h"
 #include "wifi_link.h"
 #include "common.h"
-
 /* some defines */
 link_stru s_rf_link;
 /* USER CODE BEGIN Includes */
 FS_INODE_REGISTER("xn297.d",xn297,xn297_heap_init,0);
+/* led interface */
+static struct file * led_fp;
 /* defined functions */
 static int xn297_heap_init(void)
 {
@@ -55,6 +56,9 @@ static int xn297_heap_init(void)
 /* default config */
 static int config_default(void)
 {
+	/* open led dev */
+  led_fp = open("led.o",__FS_OPEN_ALWAYS);
+	/* start binding */
 	if( rf_binding() == FS_OK )
 	{
 		/* delete init thread and create a read data thread */
@@ -427,7 +431,7 @@ static int rf_receive_data(unsigned char *pbuf,unsigned char len)
 	return (rf_checksum( pbuf ,len - 1 ) == pbuf[len - 1]) ? FS_OK : FS_ERR;
 	/* end of func */
 }
-uint32_t    binding_timerout_counter = 0;
+uint32_t binding_timerout_counter = 0;
 /* rf binding thread */
 static int rf_binding(void)
 {    
@@ -436,7 +440,6 @@ static int rf_binding(void)
 	unsigned char   binding_success_flag = 0;    
 	unsigned char   u8_temp;
 	unsigned int    exit_binding_counter = 0;
-    
 	/* default addr */
 	const unsigned char tx_addr_def[] = DEFAULT_TX_ADDE;
 	/* create a random data as a seek*/
@@ -452,21 +455,20 @@ static int rf_binding(void)
 	rf_set_rx();	
 	/* initloop */
 	while( binding_success_flag == 0 )
-	{       
-        binding_timerout_counter++;
-        if (binding_timerout_counter > 30*400)        //设计30S
-        {
-            break;
-        }
-        //5秒未接收成功退出对码状态
-        if ((0 == binding_step) && (binding_timerout_counter >= 5*400))       //设计5S
-        { 
-            break;
-        }  
-        
+	{
+		binding_timerout_counter++;
+		if (binding_timerout_counter > 30*400)        //设计30S
+		{
+			break;
+		}
+		//5秒未接收成功退出对码状态
+		if ((0 == binding_step) && (binding_timerout_counter >= 5*400))       //设计5S
+		{ 
+			break;
+		}   
 		/* default cmd case */
 		switch (binding_step)
-		{        
+		{
 			/* first get rf data */					
 			case 0:   
 				/* read statue */        
@@ -501,6 +503,8 @@ static int rf_binding(void)
 				/* end of func */
 			case 1: 
 			case 2:
+				/* toggle led */
+			  fs_ioctl(led_fp,3,0,0);
 				/* read statue */        
 				u8_temp = rf_get_statue(); 
 				/* got some data or not */
@@ -538,7 +542,7 @@ static int rf_binding(void)
 				}      
 				else
 				{
-                    rf_binding_delay(10*8000);
+          rf_binding_delay(10*8000);
 					/* can not read data */
 					if( binding_step == 2 )
 					{   
@@ -554,6 +558,8 @@ static int rf_binding(void)
 							/* out */
 							binding_success_flag = 1;				
 							/* end of cmd */
+							fs_ioctl(led_fp,2,0,0);
+							/* set led mode */
 						}                                
 					}
 				}

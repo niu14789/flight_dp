@@ -29,6 +29,7 @@
 static int led_heap_init(void);
 static int led_default_config(void);
 static void led_thread(void);
+static int led_write(FAR struct file *filp, FAR const void * buffer, unsigned int buflen);
 static struct file * led_fopen (FAR struct file *filp);
 static int led_ioctrl(FAR struct file *filp, int cmd, unsigned long arg,void *pri_data);
 /* fs inode system register */
@@ -58,8 +59,9 @@ static int led_heap_init(void)
 	/* file interface */
 	led.ops.open  = led_fopen;
 	led.ops.ioctl = led_ioctrl;
+	led.ops.write = led_write;
 	/* heap */
-	
+	led.flip.f_user0 = 5;
 	/* add your own code here */
   led.i_flags = __FS_IS_INODE_OK|__FS_IS_INODE_INIT; 	
 	/* return ok */
@@ -88,27 +90,60 @@ static struct file * led_fopen (FAR struct file *filp)
 {
 	return &led.flip;
 }
+/* file & driver 's interface write */
+static int led_write(FAR struct file *filp, FAR const void * buffer, unsigned int buflen)
+{
+	/* led dtatus */
+	filp->f_user0 = *((unsigned short *)buffer);
+	/* reuturn OK */
+	return FS_OK;
+}
 /* ioctrl for control led mode */
 static int led_ioctrl(FAR struct file *filp, int cmd, unsigned long arg,void *pri_data)
 {
-/* nothing diffrent */
+  /* nothing diffrent */
+	/* led ctrl */
+	static unsigned int led_ctrl = 0;	
 	int ret = FS_OK;
 	/* select a cmd */
 	switch(cmd)
 	{
 		case 0:
-		  /* write */
-		  
-		  /* end of cmd */
-			break;	
+			/* default config */
+		break;
 		case 1:
-			/* set led mode */
-		  break;
+			/* close all leds */
+			gpio_bit_reset(leds_hd[0][1], leds_hd[0][2]);
+			gpio_bit_reset(leds_hd[1][1], leds_hd[1][2]);
+			gpio_bit_reset(leds_hd[2][1], leds_hd[2][2]);
+			gpio_bit_reset(leds_hd[3][1], leds_hd[3][2]);		  
+		break;
+		case 2:
+			/* open all leds */
+			gpio_bit_set(leds_hd[0][1], leds_hd[0][2]);
+			gpio_bit_set(leds_hd[1][1], leds_hd[1][2]);
+			gpio_bit_set(leds_hd[2][1], leds_hd[2][2]);
+			gpio_bit_set(leds_hd[3][1], leds_hd[3][2]);
+		break;
+		case 3:
+			if( (led_ctrl++ % 50) < 25 )
+			{
+				gpio_bit_set(leds_hd[0][1], leds_hd[0][2]);
+				gpio_bit_set(leds_hd[1][1], leds_hd[1][2]);
+				gpio_bit_set(leds_hd[2][1], leds_hd[2][2]);
+				gpio_bit_set(leds_hd[3][1], leds_hd[3][2]);
+			}
+			else
+			{
+				gpio_bit_reset(leds_hd[0][1], leds_hd[0][2]);
+				gpio_bit_reset(leds_hd[1][1], leds_hd[1][2]);
+				gpio_bit_reset(leds_hd[2][1], leds_hd[2][2]);
+				gpio_bit_reset(leds_hd[3][1], leds_hd[3][2]);
+			}			
+		break;	
 		default:
 			break;
 	}
-	/* led dtatus */
-	filp->f_user0 = arg;
 	/* return */
 	return ret;
 }
