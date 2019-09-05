@@ -334,14 +334,14 @@ void clear_plane_cmd2_low_voltage_status(void) { plane_cmd2_packet.plane_status3
 void set_plane_cmd2_low_voltage_status(void) { plane_cmd2_packet.plane_status3 |= BIT1; }
 void clear_plane_cmd2_green_hands_mode(void) { plane_cmd2_packet.plane_status3 &= ~BIT2; }
 void set_plane_cmd2_green_hands_mode(void) { plane_cmd2_packet.plane_status3 |= BIT2; }
-void clear_plane_cmd2_front_left_motor_overload(void) { plane_cmd2_packet.plane_status3 &= ~BIT3; }
-void set_plane_cmd2_front_left_motor_overload(void) { plane_cmd2_packet.plane_status3 |= BIT3; }
-void clear_plane_cmd2_front_right_motor_overload(void) { plane_cmd2_packet.plane_status3 &= ~BIT4; }
-void set_plane_cmd2_front_right_motor_overload(void) { plane_cmd2_packet.plane_status3 |= BIT4; }
-void clear_plane_cmd2_back_right_motor_overload(void) { plane_cmd2_packet.plane_status3 &= ~BIT5; }
-void set_plane_cmd2_back_right_motor_overload(void) { plane_cmd2_packet.plane_status3 |= BIT5; }
-void clear_plane_cmd2_back_left_motor_overload(void) { plane_cmd2_packet.plane_status3 &= ~BIT6; }
-void set_plane_cmd2_back_left_motor_overload(void) { plane_cmd2_packet.plane_status3 |= BIT6; }
+void set_plane_cmd2_imu_mode(void) { plane_cmd2_packet.plane_status3 &= ~BIT3; }
+void set_plane_cmd2_gps_mode(void) { plane_cmd2_packet.plane_status3 |= BIT3; }
+//void clear_plane_cmd2_front_right_motor_overload(void) { plane_cmd2_packet.plane_status3 &= ~BIT4; }
+//void set_plane_cmd2_front_right_motor_overload(void) { plane_cmd2_packet.plane_status3 |= BIT4; }
+//void clear_plane_cmd2_back_right_motor_overload(void) { plane_cmd2_packet.plane_status3 &= ~BIT5; }
+//void set_plane_cmd2_back_right_motor_overload(void) { plane_cmd2_packet.plane_status3 |= BIT5; }
+//void clear_plane_cmd2_back_left_motor_overload(void) { plane_cmd2_packet.plane_status3 &= ~BIT6; }
+//void set_plane_cmd2_back_left_motor_overload(void) { plane_cmd2_packet.plane_status3 |= BIT6; }
 
 //plane_cmd2_packet.plane_status4操作
 void clear_plane_cmd2_mpu_erro(void) { plane_cmd2_packet.plane_status4 &= ~BIT0; }
@@ -373,6 +373,23 @@ void set_plane_cmd2_remote_choice_repeater(void) { plane_cmd2_packet.plane_statu
 
 //wifi_cmd0_packet
 uint16_t get_phone_control_follow_mode(void) { return wifi_cmd0_packet.follow_me_flag;}     //0xffff 开启跟随，0x0000 未开启
+//wifi_cmd1_packet.
+uint8_t get_IMU_GPS_mode(void)
+{
+    if (s_rf_link.link_status == CONNECCTING)
+    {
+        if (get_remote_mode_function_control())
+        {
+            return 1;
+        }
+        else
+            return 0;
+    }
+    else
+    {
+        return (wifi_cmd1_packet.led_control & BIT0);
+    }
+}
 //wifi_cmd1_packet.control_info 操作
 uint8_t get_phone_control_speed_mode(void) { return (m_plane_function_control_info.by_control_info & 0x03); }
 uint8_t get_phone_control_roll_mode(void) { return (m_plane_function_control_info.by_control_info & BIT2); }
@@ -523,7 +540,7 @@ void plane_send_data_packet(uint8_t *pbuffer,uint8_t cmd)
             ptrd[2] = CMD0_PACKET_LEN + 2;   
             ptrd[3] = CMD0;        
             plane_cmd0_packet.plane_voltage = (uint16_t)(bat_user.bat_voltage * 100);
-            plane_cmd0_packet.remoter_voltage = 375;//(uint16_t)(remote_packet.battery_voltage * 10);    //remote_packet.battery_voltage：为实际电压*10 
+            plane_cmd0_packet.remoter_voltage = (uint16_t)(remote_packet.battery_voltage);    //remote_packet.battery_voltage：为实际电压*100
             plane_cmd0_packet.gps_longitude = gps_user.lon;
             plane_cmd0_packet.gps_latitude =  gps_user.lat;
             plane_cmd0_packet.gps_NumSv = gps_user.numSV;
@@ -577,15 +594,15 @@ void plane_send_data_packet(uint8_t *pbuffer,uint8_t cmd)
             plane_cmd6_packet.remoter_version_h = flash.remote_version[0];
             plane_cmd6_packet.remoter_version_m = flash.remote_version[1];
             plane_cmd6_packet.remoter_version_l = flash.remote_version[2];
-            plane_cmd6_packet.gimbal_version_h = 2;
-            plane_cmd6_packet.gimbal_version_m = 1;
-            plane_cmd6_packet.gimbal_version_l = 2;
-            plane_cmd6_packet.camera_version_h = 13;
-            plane_cmd6_packet.camera_version_m = 24;
-            plane_cmd6_packet.camera_version_l = 36;
-            plane_cmd6_packet.image_version_h = 6;
-            plane_cmd6_packet.image_version_m = 2;
-            plane_cmd6_packet.image_version_l = 16;
+            plane_cmd6_packet.gimbal_version_h = 0;
+            plane_cmd6_packet.gimbal_version_m = 0;
+            plane_cmd6_packet.gimbal_version_l = 0;
+            plane_cmd6_packet.camera_version_h = 0;
+            plane_cmd6_packet.camera_version_m = 0;
+            plane_cmd6_packet.camera_version_l = 0;
+            plane_cmd6_packet.image_version_h = 0;
+            plane_cmd6_packet.image_version_m = 0;
+            plane_cmd6_packet.image_version_l = 0;
             memcpy(&ptrd[4],&plane_cmd6_packet,CMD6_PACKET_LEN);
             break;
         case    CMD9:
@@ -1059,6 +1076,16 @@ void update_plane_status_now(plane_status_def plane_function,status_def status)
 				g_dw_plane_status &= ~PLANE_RISING_FLAG_STATUS;
 			}
 			break;
+		case	PLANE_IMU_GPS_MODE_STATUS:
+			if (STATUS_ON == status)
+			{
+				g_dw_plane_status |= PLANE_IMU_GPS_MODE_FLAG_STATUS;
+			}
+			else
+			{
+				g_dw_plane_status &= ~PLANE_IMU_GPS_MODE_FLAG_STATUS;
+			}
+			break;
         default:
             break;
     }   
@@ -1214,6 +1241,12 @@ status_def get_plane_status_now(plane_status_def plane_function)
 			else
 				status_bit = STATUS_OFF;
 			break;
+		case	PLANE_IMU_GPS_MODE_STATUS:
+			if (g_dw_plane_status & PLANE_IMU_GPS_MODE_FLAG_STATUS)
+				status_bit = STATUS_ON;
+			else
+				status_bit = STATUS_OFF;
+			break;
         default:            
             break;        
     }   
@@ -1273,6 +1306,18 @@ void plane_function_status_update_to_wifi(void)
             wifi_cmd6_packet.waypoint_number = 0;
         }       
     }
+    
+    //模式功能
+    if (get_IMU_GPS_mode())
+    {   
+        //更新飞机模式状态
+        update_plane_status_now(PLANE_IMU_GPS_MODE_STATUS,STATUS_ON);
+    }
+    else
+    {
+        update_plane_status_now(PLANE_IMU_GPS_MODE_STATUS,STATUS_OFF);		
+    }
+    
     //热点环绕测试
 //    if (get_phone_control_circle())
 //    {
@@ -1298,13 +1343,14 @@ void plane_function_status_update_to_wifi(void)
     //跟随测试
     if (get_phone_control_follow_mode())
     {
-        set_plane_cmd2_follow_mode();
+//        set_plane_cmd2_follow_mode();
+        update_plane_status_now(PLANE_FOLLOW_MODE_STATUS, STATUS_ON);
         
     }
     else
     {
-//        clear_phone_control_follow_mode();
-        clear_plane_cmd2_follow_mode();
+//        clear_plane_cmd2_follow_mode();
+        update_plane_status_now(PLANE_FOLLOW_MODE_STATUS, STATUS_OFF);
     }
 
 	//一键起飞测试
@@ -1556,6 +1602,14 @@ void plane_function_status_update_to_wifi(void)
 	else
 	{
 		clear_plane_cmd2_rising_mode();
+	} 
+	if (STATUS_ON == get_plane_status_now(PLANE_IMU_GPS_MODE_STATUS))
+    {
+		set_plane_cmd2_gps_mode();
+    }
+	else
+	{
+		set_plane_cmd2_imu_mode();
 	} 
 
     

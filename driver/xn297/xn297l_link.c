@@ -29,6 +29,12 @@
 #include "string.h"
 #include "wifi_link.h"
 
+//test use
+uint16_t test_counter = 0;
+uint8_t receive_couter = 0;
+uint8_t receive_couter_backup = 0; 
+
+
 #define PLANE_FUNC  1
 
 remote_packet_stru remote_packet;
@@ -179,7 +185,7 @@ void rf_normal_data_packet(void)
     s_rf_link.tx_buffer[3] = (uint8_t)((s_rf_link.plane_function_flag >> 8) & 0x00ff) ;
     s_rf_link.tx_buffer[4] = (uint8_t)(s_rf_link.plane_function_flag & 0x00ff);
     s_rf_link.tx_buffer[5] = 0;
-    s_rf_link.tx_buffer[6] = 0;
+    s_rf_link.tx_buffer[6] = receive_couter_backup;
     s_rf_link.tx_buffer[7] = 0;
     s_rf_link.tx_buffer[8] = 0;
     s_rf_link.tx_buffer[9] = 0;
@@ -255,16 +261,15 @@ void remote_function_control(void)
 			}
         }
 		//模式功能
-		if (get_remote_mode_function_control())
-		{
-            clear_remote_mode_function_control();
-            
-			//更新飞机模式状态
-            if (STATUS_OFF == get_plane_status_now(PLANE_SPEED_MODE_STATUS))
-                update_plane_status_now(PLANE_SPEED_MODE_STATUS,STATUS_ON);
-            else
-                update_plane_status_now(PLANE_SPEED_MODE_STATUS,STATUS_OFF);		
-		}
+//		if (get_remote_mode_function_control())
+//		{
+//			//更新飞机模式状态
+//            update_plane_status_now(PLANE_SPEED_MODE_STATUS,STATUS_ON);
+//        }
+//        else
+//        {
+//            update_plane_status_now(PLANE_SPEED_MODE_STATUS,STATUS_OFF);		
+//		}
 		//camera ev+
 		if (remote_packet.camera_zoom > 0xd50)
 		{
@@ -352,10 +357,16 @@ void rf_link_test(void)
     }   
 }
 #endif
+
 void rf_link_function(void)
 {
-//    rf_link_test();
-//    return;
+    test_counter++;
+    if(test_counter >= 2000)
+    {   
+        test_counter = 0;
+        receive_couter_backup = receive_couter;
+        receive_couter = 0;
+    }
     
     if (s_rf_link.link_step == RF_STEP_HOPPING)
     {
@@ -384,6 +395,7 @@ void rf_link_function(void)
 			
         if (rev_status & RX_DR_FLAG)
         {
+            receive_couter++;
             //接收成功，读取数据
             rf_read_multiple(R_RX_PAYLOAD,s_rf_link.rx_buffer, PAYLOAD_WIDTH);                                   
             s_rf_link.loss_link_counter = 0;  

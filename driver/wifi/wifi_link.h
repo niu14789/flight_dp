@@ -543,10 +543,10 @@ typedef enum
     PLANE_SPEED_MODE_STATUS = 13,                               //0低速模式    1高速模式
     PLANE_LOW_POWER_MODE_STATUS = 14,                           //0正常模式    1低电模式
     PLANE_GREEN_HANDS_MODE_STATUS = 15,                         //0正常模式    1新手模式
-    PLANE_FRONT_LEFT_MOTOR_OVERLOAD_STATUS = 16,                //0飞机前左电机保护    1飞机前左电机过载
-    PLANE_FRONT_RIGHT_MOTOR_OVERLOAD_STATUS = 17,               //0飞机前右电机保护    1飞机前右电机过载
-    PLANE_BACK_LEFT_MOTOR_OVERLOAD_STATUS = 18,                 //0飞机后左电机保护    1飞机后左电机过载
-    PLANE_BACK_RIGHT_MOTOR_OVERLOAD_STATUS = 19,                //0飞机后右电机保护    1飞机后右电机过载
+//    PLANE_FRONT_LEFT_MOTOR_OVERLOAD_STATUS = 16,                //0飞机前左电机保护    1飞机前左电机过载
+//    PLANE_FRONT_RIGHT_MOTOR_OVERLOAD_STATUS = 17,               //0飞机前右电机保护    1飞机前右电机过载
+//    PLANE_BACK_LEFT_MOTOR_OVERLOAD_STATUS = 18,                 //0飞机后左电机保护    1飞机后左电机过载
+//    PLANE_BACK_RIGHT_MOTOR_OVERLOAD_STATUS = 19,                //0飞机后右电机保护    1飞机后右电机过载
     PLANE_MPU_ERRO_STATUS = 20,                                 //0 MPU传感器正常      1 MPU传感器错误
     PLANE_BARO_ERRO_STATUS = 21,                                //0 气压计正常         1 气压计错误
     PLANE_GPS_ERRO_STATUS = 22,                                 //0 GPS连接正常        1 GPS连接错误
@@ -555,6 +555,7 @@ typedef enum
     PLANE_GPS_RSSI_STATUS = 25,                                 //0 GPS 信号好         1 GPS 信号弱警告   
     PLANE_REMOTE_CHOICE_STATUS = 26,							//0 中继遥控器           1 2.4G遥控器
     PLANE_RISING_STATUS = 27,									//一键起飞 0：未开    1：开启
+    PLANE_IMU_GPS_MODE_STATUS = 28,                             //0:姿态模式 1：GPS模式
 
 }plane_status_def;
 
@@ -577,10 +578,10 @@ typedef enum
     PLANE_SPEED_MODE_FLAG_STATUS = 1<<13,                       //0低速模式    1高速模式
     PLANE_LOW_POWER_MODE_FLAG_STATUS = 1<<14,                   //0正常模式    1低电模式
     PLANE_GREEN_HANDS_MODE_FLAG_STATUS = 1<<15,                 //0正常模式    1新手模式
-    PLANE_FRONT_LEFT_MOTOR_OVERLOAD_FLAG_STATUS = 1<<16,        //0飞机前左电机保护    1飞机前左电机过载
-    PLANE_FRONT_RIGHT_MOTOR_OVERLOAD_FLAG_STATUS = 1<<17,       //0飞机前右电机保护    1飞机前右电机过载
-    PLANE_BACK_LEFT_MOTOR_OVERLOAD_FLAG_STATUS = 1<<18,         //0飞机后左电机保护    1飞机后左电机过载
-    PLANE_BACK_RIGHT_MOTOR_OVERLOAD_FLAG_STATUS = 1<<19,        //0飞机后右电机保护    1飞机后右电机过载
+//    PLANE_FRONT_LEFT_MOTOR_OVERLOAD_FLAG_STATUS = 1<<16,        //0飞机前左电机保护    1飞机前左电机过载
+//    PLANE_FRONT_RIGHT_MOTOR_OVERLOAD_FLAG_STATUS = 1<<17,       //0飞机前右电机保护    1飞机前右电机过载
+//    PLANE_BACK_LEFT_MOTOR_OVERLOAD_FLAG_STATUS = 1<<18,         //0飞机后左电机保护    1飞机后左电机过载
+//    PLANE_BACK_RIGHT_MOTOR_OVERLOAD_FLAG_STATUS = 1<<19,        //0飞机后右电机保护    1飞机后右电机过载
     PLANE_MPU_ERRO_FLAG_STATUS = 1<<20,                         //0 MPU传感器正常      1 MPU传感器错误
     PLANE_BARO_ERRO_FLAG_STATUS = 1<<21,                        //0 气压计正常         1 气压计错误
     PLANE_GPS_ERRO_FLAG_STATUS = 1<<22,                         //0 GPS连接正常        1 GPS连接错误
@@ -589,6 +590,7 @@ typedef enum
     PLANE_GPS_RSSI_FLAG_STATUS = 1<<25,                         //0 GPS 信号好         1 GPS 信号弱警告
     PLANE_REMOTE_CHOICE_FLAG_STATUS = 1<<26,					//0 中继遥控器           1 2.4G遥控器
     PLANE_RISING_FLAG_STATUS = 1<<27,							//一键起飞 0：未开    1：开启
+    PLANE_IMU_GPS_MODE_FLAG_STATUS = 1<<28,                     //0:姿态模式 1：GPS模式
     
 }plane_status_flag_def;
 
