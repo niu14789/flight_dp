@@ -63,7 +63,7 @@ static int config_default(void)
 	{
 		/* delete init thread and create a read data thread */
 		shell_create_dynamic("rf_link_timer",rf_link_timer,0);	//1ms
-		shell_create_dynamic("rf_link_function",rf_link_function,0);	//4ms 
+		shell_create_dynamic("rf_link_function",rf_link_function,6);	//0.5ms 
 	}
   /* reutrn OK */
 	return FS_OK;

@@ -42,6 +42,7 @@
 #define TASK_PERIOD2_ID           (0xf3)  // ms
 #define TASK_PERIOD3_ID           (0xf4) // ms
 #define TASK_PERIOD4_ID           (0xf5) // ms
+#define TASK_PERIOD5_ID           (0xf5) // ms
 
 typedef enum{
 	shell_error = 0,
